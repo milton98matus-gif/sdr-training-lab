@@ -1,7 +1,26 @@
 import crypto from 'node:crypto';
 
 const SESSION_COOKIE_NAME = 'sdr_session';
-const DEFAULT_SECRET = 'sdr-lab-standalone-secret-key-2026';
+const DEFAULT_SECRET = process.env.SESSION_SECRET || 'sdr-lab-standalone-secret-key-2026';
+
+export function hashPassword(password, salt = crypto.randomBytes(16).toString('hex')) {
+  const hash = crypto.scryptSync(password, salt, 64).toString('hex');
+  return { hash, salt };
+}
+
+export function verifyPassword(password, hash, salt) {
+  if (!password || !hash || !salt) return false;
+  try {
+    const testHash = crypto.scryptSync(password, salt, 64).toString('hex');
+    return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(testHash, 'hex'));
+  } catch (e) {
+    return false;
+  }
+}
+
+export function generateVerificationCode() {
+  return String(crypto.randomInt(100000, 999999));
+}
 
 function signToken(payload, secret = DEFAULT_SECRET) {
   const data = Buffer.from(JSON.stringify(payload)).toString('base64url');
@@ -41,9 +60,11 @@ export function parseCookies(cookieHeader) {
 
 export function createSessionCookie(user, secret = DEFAULT_SECRET) {
   const payload = {
-    userId: user.userId,
+    userId: user.userId || user.user_id,
     email: user.email.toLowerCase(),
-    displayName: user.displayName || user.email,
+    displayName: user.displayName || user.display_name || user.email,
+    role: user.role || 'participant',
+    organization: user.organization || 'OSR Manage',
     exp: Date.now() + 30 * 24 * 60 * 60 * 1000 // 30 days
   };
   const token = signToken(payload, secret);
@@ -76,7 +97,9 @@ export function resolveIdentity(headers, secret = DEFAULT_SECRET) {
       return {
         userId: payload.userId,
         email: payload.email.toLowerCase(),
-        displayName: payload.displayName || payload.email
+        displayName: payload.displayName || payload.email,
+        role: payload.role || 'participant',
+        organization: payload.organization || 'OSR Manage'
       };
     }
   }
@@ -91,29 +114,12 @@ export function resolveIdentity(headers, secret = DEFAULT_SECRET) {
       return {
         userId: payload.userId,
         email: payload.email.toLowerCase(),
-        displayName: payload.displayName || payload.email
+        displayName: payload.displayName || payload.email,
+        role: payload.role || 'participant',
+        organization: payload.organization || 'OSR Manage'
       };
     }
   }
 
   return null;
-}
-
-export async function verifyGoogleIdToken(idToken) {
-  // In production with outbound access, call Google tokeninfo endpoint:
-  // https://oauth2.googleapis.com/tokeninfo?id_token=...
-  // Or decode JWT payload and verify signature.
-  try {
-    const parts = idToken.split('.');
-    if (parts.length < 2) return null;
-    const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8'));
-    if (!payload.email || !payload.sub) return null;
-    return {
-      userId: `google_${payload.sub}`,
-      email: payload.email.toLowerCase(),
-      displayName: payload.name || payload.email
-    };
-  } catch (e) {
-    return null;
-  }
 }

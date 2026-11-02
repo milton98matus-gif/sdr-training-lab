@@ -15,12 +15,12 @@ const Training=(()=>{
  async function initialize(){
   try{const r=await api('/api/session');user=r.user;ai=r.ai||{enabled:false};snapshots=r.snapshots||{};pending=localRead(keyFor('training-pending-events'))||[];
    for(const scope of scopes)if(snapshots[scope]){const existing=localRead(keyFor(scope));const merged=merge(scope,snapshots[scope],existing);localStorage.setItem(keyFor(scope),JSON.stringify(merged));if(existing)save(scope,merged);}
-   document.querySelector('.sidebar-bottom').innerHTML=`<span class="avatar">${safe(user.name.slice(0,1).toUpperCase())}</span><div>${safe(user.name)}<small>${user.role==='owner'?'Site owner':user.role==='admin'?'Reporting administrator':'Participant'}</small></div>`;
+   document.querySelector('.sidebar-bottom').innerHTML=`<span class="avatar">${safe(user.name.slice(0,1).toUpperCase())}</span><div>${safe(user.name)}<small>${user.role==='owner'?'Owner':user.role==='admin'?'Admin':'Learner'}${user.organization?' · '+safe(user.organization):''}</small></div>`;
    document.querySelectorAll('[data-admin-only]').forEach(el=>el.hidden=!['owner','admin'].includes(user.role));
-   banner(`<span><strong>${safe(user.name)}</strong> <span id="account-sync">Progress saved to your profile</span></span><span>${legacy()?'<button class="text-button" data-training="import">Import earlier browser practice</button>':''}<a href="/signout-with-chatgpt?return_to=%2F" target="_top">Sign out</a></span>`);
+   banner(`<span><strong>${safe(user.name)}</strong> <span id="account-sync">Progress saved to your profile</span></span><span>${legacy()?'<button class="text-button" data-training="import">Import earlier browser practice</button>':''}<a href="/logout" target="_top">Sign out</a></span>`);
    document.querySelector('.footer-copy').textContent='SDR Lab · Private training records · No external analytics';
    flush();
-  }catch{online=false;banner('<span>Practice is available in this browser. Sign in to save activity to your profile and use reporting.</span><a href="/signin-with-chatgpt?return_to=%2F" target="_top">Sign in with ChatGPT</a>');}
+  }catch{online=false;window.location.href='/login';}
   notify();
  }
  function merge(scope,cloud,local){if(!local)return cloud;if(scope===scopes[0]){const firsts={...cloud.firsts};for(const [k,a]of Object.entries(local.firsts||{}))if(!firsts[k]||a.at<firsts[k].at)firsts[k]=a;const history=new Map([...(cloud.history||[]),...(local.history||[])].map(a=>[[a.caseId,a.mode,a.step,a.at,a.choice].join(':'),a]));return {...local,firsts,history:[...history.values()].sort((a,b)=>a.at-b.at).slice(-100)};}const sessions={...cloud.sessions};for(const [k,r]of Object.entries(local.sessions||{}))if(!sessions[k]||(r.updatedAt||r.at)>=(sessions[k].updatedAt||sessions[k].at))sessions[k]=r;const runs=new Map([...(cloud.runs||[]),...(local.runs||[])].map(r=>[r.call+':'+r.at,r]));return {sessions,runs:[...runs.values()].sort((a,b)=>a.at-b.at).slice(-24)};}
