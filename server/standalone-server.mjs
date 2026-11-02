@@ -113,7 +113,7 @@ export function renderLoginPage(error = '') {
       <form id="form-password" onsubmit="handlePasswordLogin(event)">
         <div class="field">
           <label for="pwd-email">Usuario o Correo Corporativo</label>
-          <input type="email" id="pwd-email" required placeholder="ej: mmatus@osrmanage.com" autocomplete="username">
+          <input type="email" id="pwd-email" required placeholder="name@company.com" autocomplete="username">
         </div>
         <div class="field">
           <label for="pwd-password">Contraseña</label>
@@ -131,7 +131,7 @@ export function renderLoginPage(error = '') {
       <div id="otp-step-1">
         <div class="field">
           <label for="otp-email">Correo Corporativo</label>
-          <input type="email" id="otp-email" placeholder="ej: atrisko@osrmanage.com">
+          <input type="email" id="otp-email" placeholder="name@company.com">
         </div>
         <button type="button" id="btn-send-code" class="btn btn-primary" onclick="handleSendCode()">Solicitar Código de Acceso</button>
       </div>
@@ -148,11 +148,11 @@ export function renderLoginPage(error = '') {
     <!-- PANEL 3: RESET REQUEST -->
     <div id="panel-reset" class="panel">
       <p style="font-size:13px; color:#cbd5e1; margin-bottom:14px; line-height:1.4;">
-        Introduce tu correo corporativo. Tu administrador o Milton Matus recibirá tu solicitud y te asignará una nueva clave temporal.
+        Introduce tu correo corporativo. Tu administrador recibirá tu solicitud y te asignará una nueva clave temporal.
       </p>
       <div class="field">
         <label for="reset-email">Correo Registrado</label>
-        <input type="email" id="reset-email" placeholder="ej: tunombre@osrmanage.com">
+        <input type="email" id="reset-email" placeholder="name@company.com">
       </div>
       <button type="button" id="btn-submit-reset" class="btn btn-primary" onclick="handleRequestReset()">Enviar Solicitud al Administrador</button>
       <div class="footer-links">
@@ -506,7 +506,7 @@ export function createServer({ db, ownerEmail = OWNER_EMAIL, adminEmails = ADMIN
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
           ok: true,
-          message: 'Solicitud enviada. Tu supervisor o Milton Matus podrá restablecer tu clave desde el panel de control.'
+          message: 'Solicitud enviada. Tu supervisor o administrador podrá restablecer tu clave desde el panel de control.'
         }));
         return;
       }
