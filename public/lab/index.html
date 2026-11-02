@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Private SDR onboarding: MSP Foundations, practical conversation training, applied exercises, and administrator progress reporting.">
+  <meta name="theme-color" content="#0b1730">
+  <title>SDR Lab · Judgment in action</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Crect width='80' height='80' rx='20' fill='%230b1730'/%3E%3Cpath d='M20 47h8V32h8v24h8V23h8v24h8' stroke='%23fff' fill='none' stroke-width='5'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="expansion.css">
+  <link rel="stylesheet" href="call-lab.css">
+  <link rel="stylesheet" href="reporting.css">
+  <link rel="stylesheet" href="onboarding.css">
+  <link rel="stylesheet" href="learning-design.css">
+  <link rel="stylesheet" href="portal-experience.css">
+  <script src="msp-cases.js" defer></script>
+  <script src="glossary.js" defer></script>
+  <script src="legacy-cases.js" defer></script>
+  <script src="call-lab-data.js" defer></script>
+  <script src="onboarding-data.js" defer></script>
+  <script src="learning-path-data.js" defer></script>
+  <script src="opportunity-data.js" defer></script>
+  <script src="training-client.js" defer></script>
+  <script src="learning-path.js" defer></script>
+  <script src="session-timing.js" defer></script><script src="ai-coach.js" defer></script><script src="activity-log.js" defer></script>
+  <script src="portal-experience.js" defer></script>
+  <script src="portal-insights.js" defer></script>
+  <script src="onboarding.js" defer></script>
+  <script src="reporting.js" defer></script>
+  <script src="call-lab.js" defer></script>
+  <script src="msp-app.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <aside class="sidebar">
+    <a href="#onboarding" class="brand" aria-label="SDR Lab, onboarding"><span class="brand-icon" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span>SDR<span class="brand-light">lab</span><small>JUDGMENT IN ACTION</small></span></a>
+    <div class="nav-label">YOUR SDR TRAINING</div>
+    <nav aria-label="Main navigation">
+      <a href="#onboarding" data-page="onboarding" aria-label="Start here, SDR onboarding"><svg class="nav-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11 12 3l9 8v10h-6v-6H9v6H3Z"/></svg> Start here</a>
+      <a href="#foundations" data-page="foundations" aria-label="MSP Foundations"><svg class="nav-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h7l2 2 2-2h7v15h-7l-2 2-2-2H3ZM12 6v15"/></svg> MSP Foundations</a>
+      <a href="#lab" data-page="lab"><svg class="nav-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h14v18H5ZM9 8h6M9 12h6M9 16h4"/></svg> Practice lab </a>
+      <a href="#calllab" data-page="calllab" aria-label="Call Lab"><svg class="nav-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h4l2 5-3 2a15 15 0 0 0 6 6l2-3 5 2v4a2 2 0 0 1-2 2C10 21 3 14 3 5a2 2 0 0 1 2-2Z"/></svg> Call Lab </a>
+      <a href="#progress" data-page="progress"><svg class="nav-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-8M22 20V7"/></svg> My progress</a>
+      <a href="#glossary" data-page="glossary"><svg class="nav-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 3h16v18H4ZM8 7h8M8 11h8M8 15h5"/></svg> Glossary</a>
+      <a href="#training" data-page="training"><svg class="nav-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4h6v3H9ZM7 5H4v16h16V5h-3M8 13l3 3 5-6"/></svg> Training record</a>
+      <a href="#reporting" data-page="reporting" data-admin-only hidden><svg class="nav-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20h18M6 16V9M12 16V4M18 16v-5"/></svg> Reporting</a>
+      <a href="#game" data-page="game"><svg class="nav-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m16 8-2 6-6 2 2-6Z"/></svg> Opportunity missions</a>
+      <a href="#walkthrough" data-page="walkthrough"><svg class="nav-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M4 4h16v16H4ZM8 8h8M8 12h6M8 16h4"/></svg> Portal walkthrough</a>
+      <a href="#guide" data-page="guide"><svg class="nav-icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16M4 12h16M4 19h16"/></svg> Call preparation</a>
+    </nav>
+    <div class="qa-signature"><img src="/lab/assets/qa-original-white.png" alt="QA"><span>Created by<br>Milton Matus</span></div>
+    <div class="sidebar-bottom"><span class="avatar">M</span><div>SDR practice<small>Private learning space</small></div><span class="status-dot" title="Private space"></span></div>
+  </aside>
+  <div class="workspace">
+    <header class="topbar"><span class="osr-topbar"><img src="/lab/assets/osr-official.png" alt="OSR"><span>SDR TRAINING <span class="crumb">/ LEARN · PRACTICE · APPLY</span></span></span><div class="topbar-actions"><a class="portal-header-tour" href="#walkthrough"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m16 8-2 6-6 2 2-6Z"/></svg> Portal walkthrough</a><button class="text-button portal-profile-trigger" data-portal="profile">My profile</button><span class="private-badge"><svg width="12" height="14" viewBox="0 0 12 14" fill="none" aria-hidden="true"><rect x="1.5" y="6" width="9" height="6.5" rx="1.5" stroke="currentColor"/><path d="M3.5 6V3.5a2.5 2.5 0 015 0V6" stroke="currentColor"/></svg> Private space</span></div></header>
+    <main id="main" tabindex="-1"></main>
+    <footer><span class="footer-copy">SDR Lab · Reconstructed simulations · No external analytics</span><span class="creator-seal"><span class="seal-monogram" aria-hidden="true">MM</span><span>Created by <strong>Milton Matus</strong></span></span></footer>
+  </div>
+  <dialog id="case-dialog" aria-labelledby="case-dialog-title"><div class="dialog-top"><div><span class="eyebrow">PRACTICE LIBRARY</span><h2 id="case-dialog-title">Choose your next case.</h2></div><button class="icon-button" data-close="case-dialog" aria-label="Close library">×</button></div><div id="case-list"></div></dialog>
+  <dialog id="term-dialog" aria-label="Vocabulary reference"><button class="icon-button term-close" data-close="term-dialog" aria-label="Close vocabulary">×</button><div id="term-content"></div></dialog>
+  <dialog id="reset-dialog" aria-labelledby="reset-title"><div class="dialog-top"><h2 id="reset-title">Reset expanded MSP progress?</h2><button class="icon-button" data-close="reset-dialog" aria-label="Cancel">×</button></div><p>This resets your expanded practice view. Submitted training activity remains available in reporting. Previous-edition browser records and all scenarios remain available.</p><div class="dialog-actions"><button class="button secondary" data-close="reset-dialog">Keep my progress</button><button class="button danger" id="confirm-reset">Delete and reset</button></div></dialog>
+  <div id="toast" role="status" class="toast"></div>
+</body>
+</html>

@@ -1,0 +1,20 @@
+'use strict';
+const SessionTiming=(()=>{
+ const IDLE_MS=120000,HEARTBEAT_MS=30000,MAX_SPAN=45000;
+ const sections=new Set(['onboarding','foundations','lab','calllab','progress','glossary','training','reporting','guide','game','walkthrough']);
+ let sessionId=null,sequence=0,timer=null,started=false,ended=false,sending=null,visible=false,lastSample=0,lastSent=0,lastInteraction=0,visibleMs=0,interactionMs=0,segments=[],activeSection=null;
+ const section=()=>sections.has(location.hash.slice(1))?location.hash.slice(1):'onboarding';
+ const foreground=()=>document.visibilityState==='visible'&&document.hasFocus();
+ function sample(){const at=performance.now(),elapsed=Math.max(0,at-lastSample),v=visible?elapsed:0,a=visible?Math.max(0,Math.min(at,lastInteraction+IDLE_MS)-lastSample):0;visibleMs+=v;interactionMs+=a;if(elapsed){const key=activeSection||section();let chunk=segments.at(-1);if(!chunk||chunk.section!==key){chunk={section:key,spanMs:0,visibleMs:0,interactionMs:0};if(segments.length<24)segments.push(chunk);else chunk=segments.find(s=>s.section===key)||segments.at(-1);}chunk.spanMs+=elapsed;chunk.visibleMs+=v;chunk.interactionMs+=a;}lastSample=at;return at;}
+ function packet(closeReason){const at=sample(),elapsed=Math.max(0,at-lastSent),spanMs=Math.min(MAX_SPAN,elapsed),ratio=elapsed?spanMs/elapsed:0;const b={sessionId,sequence:++sequence,spanMs,visibleMs:Math.min(spanMs,visibleMs*ratio),interactionMs:Math.min(spanMs,interactionMs*ratio),state:visible?(at-lastInteraction<IDLE_MS?'interaction':'visible'):'away',section:section(),segments:segments.map(s=>({section:s.section,spanMs:s.spanMs*ratio,visibleMs:s.visibleMs*ratio,interactionMs:s.interactionMs*ratio})),...(closeReason?{closeReason}:{})};b.interactionMs=Math.min(b.visibleMs,b.interactionMs);lastSent=at;visibleMs=0;interactionMs=0;segments=[];return b;}
+ async function flush(){if(!started||ended)return;if(sending)return sending;const b=packet();sending=Training.api('/api/presence/beat',{method:'POST',body:JSON.stringify(b)}).catch(()=>{}).finally(()=>{sending=null;});return sending;}
+ function end(reason='page_exit'){if(!started||ended)return;const b=packet(reason);ended=true;clearInterval(timer);const body=JSON.stringify(b);let sent=false;try{sent=navigator.sendBeacon('/api/presence/beat',new Blob([body],{type:'application/json'}));}catch{}if(!sent)fetch('/api/presence/beat',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body,keepalive:true}).catch(()=>{});}
+ function interact(e){if(!started||ended||!e.isTrusted)return;const at=sample();visible=foreground();if(visible)lastInteraction=at;}
+ function visibility(){if(!started||ended)return;sample();visible=foreground();if(visible)lastInteraction=performance.now();flush();}
+ function start(){if(!Training.user||started&&!ended)return;started=true;ended=false;sessionId=crypto.randomUUID();sequence=0;visible=foreground();lastSample=lastSent=lastInteraction=performance.now();visibleMs=interactionMs=0;segments=[];activeSection=section();flush();timer=setInterval(flush,HEARTBEAT_MS);const notice=document.querySelector('#portal-timing-notice');if(!notice){const link=document.createElement('a');link.id='portal-timing-notice';link.href='#training';link.className='portal-timing-notice';link.textContent='Session timing is recorded';document.querySelector('#account-status')?.append(link);}}
+ for(const type of ['pointerdown','keydown','input','scroll','touchstart'])document.addEventListener(type,interact,{passive:true,capture:true});
+ document.addEventListener('visibilitychange',visibility);window.addEventListener('focus',visibility);window.addEventListener('blur',visibility);
+ window.addEventListener('hashchange',()=>{if(started&&!ended){sample();activeSection=section();flush();}});window.addEventListener('pagehide',()=>end());window.addEventListener('pageshow',e=>{if(e.persisted){started=false;sending=null;start();}});
+ document.addEventListener('click',e=>{const a=e.target.closest('a');if(a?.getAttribute('href')?.startsWith('/signout-with-chatgpt'))end('sign_out');},{capture:true});
+ Training.ready.then(start);return {flush};
+})();
