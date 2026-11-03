@@ -1,9 +1,12 @@
+import crypto from 'node:crypto';
+if (!globalThis.crypto) globalThis.crypto = crypto;
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { handleTrainingRequest } from '../lib/training-service.mjs';
 import { createDatabase, SEEDED_ACCOUNTS } from './db.mjs';
+import { scheduleCloudSync } from './persistence.mjs';
 import { 
   resolveIdentity, 
   createSessionCookie, 
@@ -36,6 +39,39 @@ const HOST = process.env.HOST || '0.0.0.0';
 const OWNER_EMAIL = process.env.TRAINING_OWNER_EMAIL || 'milton98matus@gmail.com';
 const ADMIN_EMAILS = process.env.TRAINING_ADMIN_EMAILS || '["atrisko@osrmanage.com","tmcneil@osrmanage.com","arogers@osrmanage.com","rrogers@osrmanage.com","salvarez@osrmanage.com"]';
 const DB_PATH = process.env.DATABASE_PATH || ':memory:';
+const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
+const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'SDR Lab <onboarding@resend.dev>';
+
+async function sendEmailViaResend({ to, subject, html, text }) {
+  if (!RESEND_API_KEY) return false;
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${RESEND_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: RESEND_FROM_EMAIL,
+        to: Array.isArray(to) ? to : [to],
+        subject,
+        html,
+        text
+      })
+    });
+    const result = await res.json();
+    if (!res.ok) {
+      console.error('[Resend Error]', result);
+      return false;
+    }
+    console.log('[Resend Success] Email sent to', to, 'ID:', result.id);
+    return true;
+  } catch (err) {
+    console.error('[Resend Exception]', err);
+    return false;
+  }
+}
+
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.TRAINING_AI_KEY || '';
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
@@ -50,11 +86,11 @@ const aiConfig = {
 
 export function renderLoginPage(error = '') {
   return `<!doctype html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Acceso Privado · SDR Lab · OSR Manage</title>
+  <title>Sign In · SDR Training Lab · OSR Manage</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background-color: #0b1730; color: #f0f4f8; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
@@ -63,10 +99,6 @@ export function renderLoginPage(error = '') {
     .brand { font-size: 28px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
     .brand span { color: #bbf451; }
     .subtitle { font-size: 11px; color: #94a3b8; margin-top: 6px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; }
-    
-    .tabs { display: flex; background: #0c1836; border-radius: 8px; padding: 4px; margin-bottom: 24px; border: 1px solid #1e356d; }
-    .tab-btn { flex: 1; padding: 9px; font-size: 13px; font-weight: 600; text-align: center; border-radius: 6px; cursor: pointer; border: none; background: transparent; color: #94a3b8; transition: all 0.2s; }
-    .tab-btn.active { background: #1e356d; color: #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
     
     .status-msg { display: none; padding: 12px 14px; border-radius: 8px; font-size: 13px; line-height: 1.4; margin-bottom: 18px; }
     .status-msg.error { background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #fca5a5; display: block; }
@@ -80,8 +112,6 @@ export function renderLoginPage(error = '') {
     .btn { display: block; width: 100%; padding: 12px; border-radius: 8px; font-size: 14px; font-weight: 700; text-align: center; cursor: pointer; border: none; transition: all 0.2s; }
     .btn-primary { background: #bbf451; color: #0b1730; margin-top: 10px; }
     .btn-primary:hover { background: #a8e03e; transform: translateY(-1px); }
-    .btn-secondary { background: #1e356d; color: #e2e8f0; margin-top: 8px; }
-    .btn-secondary:hover { background: #264388; }
     .btn:disabled { opacity: 0.6; cursor: not-allowed; }
     
     .footer-links { margin-top: 22px; text-align: center; font-size: 13px; }
@@ -98,71 +128,47 @@ export function renderLoginPage(error = '') {
   <div class="card">
     <div class="header">
       <div class="brand">SDR<span>lab</span></div>
-      <div class="subtitle">OSR Manage · Acceso Privado</div>
-    </div>
-
-    <div class="tabs">
-      <button type="button" class="tab-btn active" id="tab-pwd" onclick="switchTab('password')">🔐 Contraseña</button>
-      <button type="button" class="tab-btn" id="tab-otp" onclick="switchTab('otp')">✉️ Código de Acceso</button>
+      <div class="subtitle">OSR Manage · Private Access</div>
     </div>
 
     <div id="status" class="status-msg ${error ? 'error' : ''}">${error}</div>
 
-    <!-- PANEL 1: CONTRASEÑA -->
+    <!-- PANEL 1: PASSWORD LOGIN -->
     <div id="panel-password" class="panel active">
       <form id="form-password" onsubmit="handlePasswordLogin(event)">
         <div class="field">
-          <label for="pwd-email">Usuario o Correo Corporativo</label>
+          <label for="pwd-email">Work Email</label>
           <input type="email" id="pwd-email" required placeholder="name@company.com" autocomplete="username">
         </div>
         <div class="field">
-          <label for="pwd-password">Contraseña</label>
+          <label for="pwd-password">Password</label>
           <input type="password" id="pwd-password" required placeholder="••••••••••••" autocomplete="current-password">
         </div>
-        <button type="submit" id="btn-login-pwd" class="btn btn-primary">Entrar a la Plataforma</button>
+        <button type="submit" id="btn-login-pwd" class="btn btn-primary">Sign In to SDR Lab</button>
       </form>
       <div class="footer-links">
-        <a class="text-link" onclick="toggleResetForm(true)">¿Olvidaste tu contraseña? Solicitar ayuda</a>
+        <a class="text-link" onclick="toggleResetForm(true)">Forgot your password? Request assistance</a>
       </div>
     </div>
 
-    <!-- PANEL 2: CÓDIGO OTP -->
-    <div id="panel-otp" class="panel">
-      <div id="otp-step-1">
-        <div class="field">
-          <label for="otp-email">Correo Corporativo</label>
-          <input type="email" id="otp-email" placeholder="name@company.com">
-        </div>
-        <button type="button" id="btn-send-code" class="btn btn-primary" onclick="handleSendCode()">Solicitar Código de Acceso</button>
-      </div>
-      <div id="otp-step-2" style="display:none; margin-top:16px;">
-        <div class="field">
-          <label for="otp-code">Código de Verificación (6 dígitos)</label>
-          <input type="text" id="otp-code" maxlength="6" placeholder="123456" style="letter-spacing: 4px; font-size: 18px; text-align: center;">
-        </div>
-        <button type="button" id="btn-verify-code" class="btn btn-primary" onclick="handleVerifyCode()">Verificar e Ingresar</button>
-        <button type="button" class="btn btn-secondary" onclick="resetOtpStep()">Cambiar Correo</button>
-      </div>
-    </div>
-
-    <!-- PANEL 3: RESET REQUEST -->
+    <!-- PANEL 2: RESET REQUEST -->
     <div id="panel-reset" class="panel">
       <p style="font-size:13px; color:#cbd5e1; margin-bottom:14px; line-height:1.4;">
-        Introduce tu correo corporativo. Tu administrador recibirá tu solicitud y te asignará una nueva clave temporal.
+        Enter your registered work email. Your administrator will receive your request and provide a temporary password.
       </p>
       <div class="field">
-        <label for="reset-email">Correo Registrado</label>
+        <label for="reset-email">Work Email</label>
         <input type="email" id="reset-email" placeholder="name@company.com">
       </div>
-      <button type="button" id="btn-submit-reset" class="btn btn-primary" onclick="handleRequestReset()">Enviar Solicitud al Administrador</button>
+      <button type="button" id="btn-submit-reset" class="btn btn-primary" onclick="handleRequestReset()">Send Reset Request</button>
       <div class="footer-links">
-        <a class="text-link" onclick="toggleResetForm(false)">← Volver al inicio de sesión</a>
+        <a class="text-link" onclick="toggleResetForm(false)">← Back to Sign In</a>
       </div>
     </div>
 
     <div class="badge-secure">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-      Acceso exclusivo para personal autorizado de OSR Manage
+      Authorized OSR Manage personnel only
     </div>
   </div>
 
@@ -180,29 +186,10 @@ export function renderLoginPage(error = '') {
       el.textContent = '';
     }
 
-    function switchTab(tab) {
-      clearMsg();
-      document.getElementById('panel-reset').classList.remove('active');
-      document.getElementById('tab-pwd').classList.toggle('active', tab === 'password');
-      document.getElementById('tab-otp').classList.toggle('active', tab === 'otp');
-      document.getElementById('panel-password').classList.toggle('active', tab === 'password');
-      document.getElementById('panel-otp').classList.toggle('active', tab === 'otp');
-    }
-
     function toggleResetForm(show) {
       clearMsg();
       document.getElementById('panel-password').classList.toggle('active', !show);
-      document.getElementById('panel-otp').classList.remove('active');
       document.getElementById('panel-reset').classList.toggle('active', show);
-      document.getElementById('tab-pwd').classList.toggle('active', !show);
-      document.getElementById('tab-otp').classList.remove('active');
-    }
-
-    function resetOtpStep() {
-      document.getElementById('otp-step-1').style.display = 'block';
-      document.getElementById('otp-step-2').style.display = 'none';
-      document.getElementById('otp-code').value = '';
-      clearMsg();
     }
 
     async function handlePasswordLogin(e) {
@@ -213,7 +200,7 @@ export function renderLoginPage(error = '') {
       const password = document.getElementById('pwd-password').value;
       
       btn.disabled = true;
-      btn.textContent = 'Verificando…';
+      btn.textContent = 'Signing in…';
 
       try {
         const res = await fetch('/api/auth/login', {
@@ -223,72 +210,13 @@ export function renderLoginPage(error = '') {
         });
         const data = await res.json();
         if (!res.ok || !data.ok) {
-          throw new Error(data.error || 'Credenciales incorrectas.');
+          throw new Error(data.error || 'Invalid email or password.');
         }
         window.location.href = data.redirect || '/';
       } catch (err) {
         showMsg(err.message, true);
         btn.disabled = false;
-        btn.textContent = 'Entrar a la Plataforma';
-      }
-    }
-
-    async function handleSendCode() {
-      clearMsg();
-      const btn = document.getElementById('btn-send-code');
-      const email = document.getElementById('otp-email').value.trim();
-      if (!email) {
-        showMsg('Ingresa tu correo corporativo.', true);
-        return;
-      }
-      btn.disabled = true;
-      btn.textContent = 'Generando código…';
-
-      try {
-        const res = await fetch('/api/auth/send-code', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email })
-        });
-        const data = await res.json();
-        if (!res.ok || !data.ok) throw new Error(data.error || 'No se pudo enviar el código.');
-        showMsg(data.message || 'Código generado con éxito. Ingrésalo abajo.', false);
-        document.getElementById('otp-step-1').style.display = 'none';
-        document.getElementById('otp-step-2').style.display = 'block';
-        document.getElementById('otp-code').focus();
-      } catch (err) {
-        showMsg(err.message, true);
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Solicitar Código de Acceso';
-      }
-    }
-
-    async function handleVerifyCode() {
-      clearMsg();
-      const btn = document.getElementById('btn-verify-code');
-      const email = document.getElementById('otp-email').value.trim();
-      const code = document.getElementById('otp-code').value.trim();
-      if (!code || code.length !== 6) {
-        showMsg('Ingresa el código de 6 dígitos.', true);
-        return;
-      }
-      btn.disabled = true;
-      btn.textContent = 'Verificando…';
-
-      try {
-        const res = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, code })
-        });
-        const data = await res.json();
-        if (!res.ok || !data.ok) throw new Error(data.error || 'Código incorrecto o expirado.');
-        window.location.href = data.redirect || '/';
-      } catch (err) {
-        showMsg(err.message, true);
-        btn.disabled = false;
-        btn.textContent = 'Verificar e Ingresar';
+        btn.textContent = 'Sign In to SDR Lab';
       }
     }
 
@@ -297,11 +225,11 @@ export function renderLoginPage(error = '') {
       const btn = document.getElementById('btn-submit-reset');
       const email = document.getElementById('reset-email').value.trim();
       if (!email) {
-        showMsg('Ingresa tu correo.', true);
+        showMsg('Please enter your work email.', true);
         return;
       }
       btn.disabled = true;
-      btn.textContent = 'Enviando solicitud…';
+      btn.textContent = 'Sending request…';
 
       try {
         const res = await fetch('/api/auth/request-reset', {
@@ -310,12 +238,12 @@ export function renderLoginPage(error = '') {
           body: JSON.stringify({ email })
         });
         const data = await res.json();
-        showMsg(data.message || 'Solicitud enviada.', false);
+        showMsg(data.message || 'Reset request sent to your administrator.', false);
       } catch (err) {
         showMsg(err.message, true);
       } finally {
         btn.disabled = false;
-        btn.textContent = 'Enviar Solicitud al Administrador';
+        btn.textContent = 'Send Reset Request';
       }
     }
   </script>
@@ -328,7 +256,9 @@ export function createServer({ db, ownerEmail = OWNER_EMAIL, adminEmails = ADMIN
 
   const server = http.createServer(async (req, res) => {
     try {
-      const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+      const proto = req.headers['x-forwarded-proto'] || (req.socket?.encrypted ? 'https' : 'http');
+      const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost';
+      const url = new URL(req.url, `${proto}://${host}`);
       const pathname = url.pathname;
 
       // 1. Auth routes
@@ -383,7 +313,7 @@ export function createServer({ db, ownerEmail = OWNER_EMAIL, adminEmails = ADMIN
         const creds = await database.prepare('SELECT * FROM training_user_credentials WHERE email = ?').bind(email).first();
         if (!creds) {
           res.writeHead(401, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ ok: false, error: 'Usuario no registrado. Solicita acceso a tu administrador.' }));
+          res.end(JSON.stringify({ ok: false, error: 'Account not found. Please contact your administrator for access.' }));
           return;
         }
 
@@ -404,13 +334,19 @@ export function createServer({ db, ownerEmail = OWNER_EMAIL, adminEmails = ADMIN
 
         if (!authenticated) {
           res.writeHead(401, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ ok: false, error: 'Contraseña incorrecta. Verifica tus datos o solicita restablecimiento.' }));
+          res.end(JSON.stringify({ ok: false, error: 'Incorrect password. Please try again or request a password reset.' }));
           return;
         }
 
-        // Fetch profile
-        const profile = await database.prepare('SELECT * FROM training_profiles WHERE user_id = ?').bind(creds.user_id).first();
-        const role = profile?.role || 'participant';
+        // Fetch profile and ensure Owner role
+        const KNOWN_OWNERS = new Set(['milton98matus@gmail.com', 'mmatus@osrmanage.com', (ownerEmail||'').toLowerCase()].filter(Boolean));
+        const isOwner = KNOWN_OWNERS.has(creds.email.toLowerCase());
+        
+        let profile = await database.prepare('SELECT * FROM training_profiles WHERE user_id = ?').bind(creds.user_id).first();
+        if (isOwner && (!profile || profile.role !== 'owner')) {
+          await database.prepare("UPDATE training_profiles SET role='owner' WHERE user_id=?").bind(creds.user_id).run();
+        }
+        const role = isOwner ? 'owner' : (profile?.role || 'participant');
 
         const user = {
           userId: creds.user_id,
@@ -473,10 +409,34 @@ export function createServer({ db, ownerEmail = OWNER_EMAIL, adminEmails = ADMIN
         console.log(`Válido durante 15 minutos (Expira: ${new Date(expires).toLocaleTimeString()})`);
         console.log(`==================================================\n`);
 
+        let sentEmail = false;
+        if (RESEND_API_KEY) {
+          sentEmail = await sendEmailViaResend({
+            to: email,
+            subject: 'Tu código de acceso a SDR Training Lab',
+            html: `
+              <div style="font-family:sans-serif;max-width:500px;margin:auto;padding:24px;border:1px solid #e2e8f0;border-radius:10px;">
+                <h2 style="color:#0b1730;margin-top:0;">SDR Lab · Código de Acceso</h2>
+                <p style="color:#475569;font-size:15px;">Hola ${creds.display_name},</p>
+                <p style="color:#475569;font-size:15px;">Tu código de verificación de 6 dígitos para acceder a la plataforma es:</p>
+                <div style="text-align:center;padding:16px;background:#0b1730;border-radius:8px;margin:20px 0;">
+                  <span style="color:#bbf451;font-size:32px;font-weight:bold;letter-spacing:6px;font-family:monospace;">${code}</span>
+                </div>
+                <p style="color:#64748b;font-size:13px;">Este código es válido durante 15 minutos. Si no solicitaste este acceso, puedes ignorar este mensaje.</p>
+                <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;">
+                <p style="color:#94a3b8;font-size:12px;text-align:center;">OSR Manage · SDR Training Lab</p>
+              </div>
+            `,
+            text: `Tu código de acceso a SDR Training Lab es: ${code}. Válido durante 15 minutos.`
+          });
+        }
+
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
           ok: true,
-          message: `Código de verificación generado para ${email}. Ingrésalo a continuación para acceder.`
+          message: sentEmail
+            ? `Código enviado con éxito a tu correo (${email}). Revisa tu bandeja de entrada.`
+            : `Código de verificación generado para ${email}. Ingrésalo a continuación para acceder.`
         }));
         return;
       }
@@ -506,7 +466,7 @@ export function createServer({ db, ownerEmail = OWNER_EMAIL, adminEmails = ADMIN
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
           ok: true,
-          message: 'Solicitud enviada. Tu supervisor o administrador podrá restablecer tu clave desde el panel de control.'
+          message: 'Reset request submitted. Your administrator has been notified in the Reporting portal.'
         }));
         return;
       }
@@ -522,7 +482,7 @@ export function createServer({ db, ownerEmail = OWNER_EMAIL, adminEmails = ADMIN
       if (pathname.startsWith('/api/')) {
         const identity = resolveIdentity(req.headers);
         const body = ['POST', 'PUT', 'PATCH'].includes(req.method) ? await readBody(req) : null;
-        const origin = req.headers.origin || `http://${req.headers.host || 'localhost'}`;
+        const origin = req.headers.origin || `${proto}://${host}`;
 
         const webRequest = new Request(url.href, {
           method: req.method,
@@ -550,6 +510,9 @@ export function createServer({ db, ownerEmail = OWNER_EMAIL, adminEmails = ADMIN
         res.writeHead(webResponse.status, headers);
         const resText = await webResponse.text();
         res.end(resText);
+        if (['POST', 'PUT', 'DELETE'].includes(req.method) && webResponse.status >= 200 && webResponse.status < 300) {
+          scheduleCloudSync(database, 3000);
+        }
         return;
       }
 
@@ -563,7 +526,7 @@ export function createServer({ db, ownerEmail = OWNER_EMAIL, adminEmails = ADMIN
       const fullPath = path.join(PUBLIC_DIR, safeRelative);
 
       // Protect SPA routes and HTML pages
-      if (filePath === '/index.html' || pathname === '/') {
+      if (filePath === '/index.html' || pathname === '/' || pathname.endsWith('.html') || filePath.endsWith('.html')) {
         const identity = resolveIdentity(req.headers);
         if (!identity) {
           res.writeHead(302, { 'Location': '/login' });
@@ -632,7 +595,7 @@ async function readBody(req) {
     let data = '';
     req.on('data', chunk => {
       data += chunk;
-      if (data.length > 200000) {
+      if (data.length > 15000000) {
         reject(new Error('Payload too large'));
       }
     });

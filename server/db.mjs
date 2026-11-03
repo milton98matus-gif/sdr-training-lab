@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { hashPassword } from './auth.mjs';
+import { restoreFromCloud } from './persistence.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -12,7 +13,7 @@ try {
   DatabaseSyncClass = sqlite.DatabaseSync;
 } catch (e) {
   // If node:sqlite is not natively available, import bridge
-  const bridge = await import('/tmp/sqlite_sync.mjs');
+  const bridge = await import('./sqlite-bridge.mjs');
   DatabaseSyncClass = bridge.DatabaseSync;
 }
 
@@ -101,23 +102,24 @@ export async function seedInitialUsers(db, defaultPassword = process.env.INITIAL
       await db.prepare('UPDATE training_profiles SET role = ? WHERE user_id = ?').bind('owner', userId).run();
     }
 
+    // Ensure organization is registered in training_msp_accounts
+    const mspId = acc.organization.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'osr-manage';
+    await db.prepare(`
+      INSERT INTO training_msp_accounts (id, name, normalized_name, active, updated_at, updated_by)
+      VALUES (?, ?, ?, 1, ?, 'system-seed')
+      ON CONFLICT(id) DO NOTHING
+    `).bind(mspId, acc.organization, acc.organization.toLowerCase(), at).run();
+
     // Participant details
     const [firstName, ...rest] = acc.name.split(' ');
-    const lastName = rest.join(' ') || '';
+    const lastName = rest.join(' ') || 'OSR';
     await db.prepare(`
       INSERT INTO training_participant_details
       (user_id, first_name, last_name, requested_msp_id, approved_msp_id, verified_at, verified_by, updated_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT(user_id) DO UPDATE SET approved_msp_id = excluded.approved_msp_id, updated_at = excluded.updated_at
-    `).bind(userId, firstName, lastName, acc.organization, acc.organization, at, 'system-seed', at).run();
+      ON CONFLICT(user_id) DO UPDATE SET requested_msp_id = excluded.requested_msp_id, approved_msp_id = excluded.approved_msp_id, verified_at = excluded.verified_at, updated_at = excluded.updated_at
+    `).bind(userId, firstName, lastName, mspId, mspId, at, 'system-seed', at).run();
   }
-
-  // Ensure 'OSR Manage' is registered in training_msp_accounts
-  await db.prepare(`
-    INSERT INTO training_msp_accounts (id, name, normalized_name, active, updated_at, updated_by)
-    VALUES ('osr-manage', 'OSR Manage', 'osr manage', 1, ?, 'system-seed')
-    ON CONFLICT(id) DO NOTHING
-  `).bind(at).run();
 }
 
 export function createDatabase(dbLocation = ':memory:') {
@@ -146,20 +148,21 @@ export function createDatabase(dbLocation = ':memory:') {
 
   function statement(sql, args = []) {
     return {
+      _getSqlAndArgs() { return { sql, args }; },
       bind(...values) {
         const flat = values.length === 1 && Array.isArray(values[0]) ? values[0] : values;
         return statement(sql, flat);
       },
       async run() {
-        const r = sqlite.prepare(sql).run(...args);
-        return { success: true, meta: { changes: Number(r.changes) } };
+        const r = await sqlite.prepare(sql).run(...args);
+        return { success: true, meta: { changes: Number(r?.changes || 0) } };
       },
       async first() {
-        const row = sqlite.prepare(sql).get(...args);
+        const row = await sqlite.prepare(sql).get(...args);
         return row !== undefined ? row : null;
       },
       async all() {
-        const rows = sqlite.prepare(sql).all(...args);
+        const rows = await sqlite.prepare(sql).all(...args);
         return { results: rows || [] };
       }
     };
@@ -168,16 +171,22 @@ export function createDatabase(dbLocation = ':memory:') {
   const db = {
     prepare: statement,
     async batch(statements) {
-      sqlite.exec('BEGIN');
+      if (typeof sqlite.batch === 'function') {
+        const stmts = statements.map(s => s._getSqlAndArgs ? s._getSqlAndArgs() : null).filter(Boolean);
+        if (stmts.length === statements.length) {
+          return sqlite.batch(stmts);
+        }
+      }
+      try { sqlite.exec('BEGIN'); } catch {}
       try {
         const results = [];
         for (const s of statements) {
           results.push(await s.run());
         }
-        sqlite.exec('COMMIT');
+        try { sqlite.exec('COMMIT'); } catch {}
         return results;
       } catch (e) {
-        sqlite.exec('ROLLBACK');
+        try { sqlite.exec('ROLLBACK'); } catch {}
         throw e;
       }
     },
@@ -187,7 +196,7 @@ export function createDatabase(dbLocation = ':memory:') {
   };
 
   // Seed default accounts asynchronously without blocking
-  seedInitialUsers(db).catch(err => console.error('Seeding error:', err));
+  seedInitialUsers(db).then(() => restoreFromCloud(db)).catch(err => console.error('Init/Restore error:', err));
 
   return db;
 }
