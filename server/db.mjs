@@ -102,23 +102,42 @@ export async function seedInitialUsers(db, defaultPassword = process.env.INITIAL
       await db.prepare('UPDATE training_profiles SET role = ? WHERE user_id = ?').bind('owner', userId).run();
     }
 
-    // Ensure organization is registered in training_msp_accounts
-    const mspId = acc.organization.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'osr-manage';
+    // Participant details
+    const [firstName, ...rest] = acc.name.split(' ');
+    const lastName = rest.join(' ') || '';
+    await db.prepare(`
+      INSERT INTO training_participant_details
+      (user_id, first_name, last_name, requested_msp_id, approved_msp_id, verified_at, verified_by, updated_at)
+      VALUES (?, ?, ?, NULL, NULL, ?, 'system-seed', ?)
+      ON CONFLICT(user_id) DO UPDATE SET 
+        first_name = excluded.first_name, 
+        last_name = excluded.last_name,
+        approved_msp_id = CASE WHEN training_participant_details.approved_msp_id = 'osr-manage' THEN NULL ELSE training_participant_details.approved_msp_id END,
+        requested_msp_id = CASE WHEN training_participant_details.requested_msp_id = 'osr-manage' THEN NULL ELSE training_participant_details.requested_msp_id END,
+        updated_at = excluded.updated_at
+    `).bind(userId, firstName, lastName, at, at).run();
+  }
+
+  // Seed actual MSP client accounts (OSR Manage is parent organization, not an MSP)
+  const defaultMsps = [
+    { id: 'advantage', name: 'Advantage' },
+    { id: 'jig', name: 'JIG' }
+  ];
+  for (const m of defaultMsps) {
     await db.prepare(`
       INSERT INTO training_msp_accounts (id, name, normalized_name, active, updated_at, updated_by)
       VALUES (?, ?, ?, 1, ?, 'system-seed')
       ON CONFLICT(id) DO NOTHING
-    `).bind(mspId, acc.organization, acc.organization.toLowerCase(), at).run();
+    `).bind(m.id, m.name, m.name.toLowerCase(), at).run();
+  }
 
-    // Participant details
-    const [firstName, ...rest] = acc.name.split(' ');
-    const lastName = rest.join(' ') || 'OSR';
-    await db.prepare(`
-      INSERT INTO training_participant_details
-      (user_id, first_name, last_name, requested_msp_id, approved_msp_id, verified_at, verified_by, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT(user_id) DO UPDATE SET requested_msp_id = excluded.requested_msp_id, approved_msp_id = excluded.approved_msp_id, verified_at = excluded.verified_at, updated_at = excluded.updated_at
-    `).bind(userId, firstName, lastName, mspId, mspId, at, 'system-seed', at).run();
+  // Safe migration: Purge 'osr-manage' from MSP registry so it never appears as an MSP
+  try {
+    await db.prepare("DELETE FROM training_msp_accounts WHERE id = 'osr-manage'").run();
+    await db.prepare("UPDATE training_participant_details SET approved_msp_id = NULL WHERE approved_msp_id = 'osr-manage'").run();
+    await db.prepare("UPDATE training_participant_details SET requested_msp_id = NULL WHERE requested_msp_id = 'osr-manage'").run();
+  } catch (err) {
+    console.error('[DB Migration Error]', err.message);
   }
 }
 

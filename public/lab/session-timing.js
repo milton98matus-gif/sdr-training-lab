@@ -15,6 +15,6 @@ const SessionTiming=(()=>{
  for(const type of ['pointerdown','keydown','input','scroll','touchstart'])document.addEventListener(type,interact,{passive:true,capture:true});
  document.addEventListener('visibilitychange',visibility);window.addEventListener('focus',visibility);window.addEventListener('blur',visibility);
  window.addEventListener('hashchange',()=>{if(started&&!ended){sample();activeSection=section();flush();}});window.addEventListener('pagehide',()=>end());window.addEventListener('pageshow',e=>{if(e.persisted){started=false;sending=null;start();}});
- document.addEventListener('click',e=>{const a=e.target.closest('a');if(a?.getAttribute('href')?.startsWith('/signout-with-chatgpt'))end('sign_out');},{capture:true});
+ document.addEventListener('click',e=>{const a=e.target.closest('a');if((a?.getAttribute('href')?.startsWith('/logout') || a?.getAttribute('href')?.startsWith('/signout-with-chatgpt')))end('sign_out');},{capture:true});
  Training.ready.then(start);return {flush};
 })();

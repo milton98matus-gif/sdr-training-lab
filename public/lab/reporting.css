@@ -4,3 +4,322 @@
 @media print{body{background:#fff}.sidebar,.topbar,#account-status,footer,.report-actions,.report-toolbar,.report-history,.report-footnote,.report-suggestion a{display:none!important}.workspace{margin:0}main{padding:0;max-width:none;min-height:0}.reporting-page .content-card,.report-stats>div{break-inside:avoid;box-shadow:none}.report-record-heading h1{font-size:28px}.report-two{grid-template-columns:1fr 1fr}.report-stats{grid-template-columns:repeat(4,1fr)}.report-stats strong{font-size:27px}.report-table{min-width:0}.report-capture-note{background:#f4f6f0;print-color-adjust:exact}.report-loading{display:none}}
 
 .report-activity-detail{grid-column:1/-1;font-size:11px;color:#7f936b;line-height:1.85}.report-activity-detail summary{font-size:10px;color:#a18e70;cursor:pointer}.report-activity-detail>div{border-left:2px solid #cddbbd;padding:10px 14px;margin-top:14px;background:#f7f9f2}.report-activity-detail p{margin-top:8px}.report-activity-detail b{font-weight:600}
+
+/* ==========================================================================
+   L&D-SDRlab Enterprise Styling: Topbar, Admin Portal Tabs, Badges & Hub
+   ========================================================================== */
+
+/* Topbar Brand & OSR Logo Badge */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #081226;
+  border-bottom: 1px solid #1a2d54;
+  padding: 0 24px;
+  min-height: 64px;
+}
+.topbar-brand-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.osr-logo-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  padding: 5px 12px;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+  border: 1px solid #cbd5e1;
+  flex-shrink: 0;
+}
+.osr-logo-img {
+  height: 22px;
+  width: auto;
+  display: block;
+}
+.topbar-divider {
+  width: 1px;
+  height: 32px;
+  background: #1e3568;
+}
+.topbar-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.topbar-platform-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.topbar-edition-badge {
+  font-size: 9px;
+  font-weight: 700;
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 1px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.8px;
+}
+.topbar-platform-sub {
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* Topbar Actions & Sign Out */
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.topbar-profile-btn,
+.portal-header-tour {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: #101e3d;
+  color: #cbd5e1;
+  border: 1px solid #1e3568;
+  padding: 7px 13px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.topbar-profile-btn:hover,
+.portal-header-tour:hover {
+  background: #172a54;
+  color: #ffffff;
+  border-color: #2b4b8a;
+}
+.topbar-signout-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  padding: 7px 14px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.topbar-signout-btn:hover {
+  background: rgba(239, 68, 68, 0.22);
+  color: #ffffff;
+  border-color: #ef4444;
+}
+
+/* Sidebar Clean User Identity */
+.sidebar-user-block {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sidebar-user-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f1f5f9;
+  display: block;
+}
+
+/* Footer Discreet Creator Credit */
+.footer-credit {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: #94a3b8;
+}
+.footer-qa-icon {
+  height: 18px;
+  width: auto;
+  opacity: 0.85;
+}
+
+/* Admin Portal Tab Navigation */
+.admin-portal-tabs {
+  display: flex;
+  gap: 6px;
+  background: #0b1730;
+  border: 1px solid #1e356d;
+  padding: 6px;
+  border-radius: 10px;
+  overflow-x: auto;
+  margin-bottom: 24px;
+}
+.admin-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  background: transparent;
+  color: #94a3b8;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+.admin-tab:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.05);
+}
+.admin-tab.active {
+  background: #1e356d;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+.badge-count {
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+/* Overview Stat Cards Grid */
+.admin-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.overview-stat-card {
+  background: #132247;
+  border: 1px solid #1e356d;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+.overview-stat-card small {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #94a3b8;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+.overview-stat-card strong {
+  font-size: 28px;
+  color: #ffffff;
+  margin: 8px 0 4px;
+  font-weight: 800;
+}
+.overview-stat-card strong span {
+  font-size: 14px;
+  color: #bbf451;
+  font-weight: 600;
+}
+.overview-stat-card span {
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* MSP Hierarchy Notice */
+.msp-hierarchy-notice {
+  background: #0b1730;
+  border-left: 3px solid #38bdf8;
+  border-radius: 0 8px 8px 0;
+  padding: 12px 16px;
+  margin-top: 14px;
+}
+.msp-hierarchy-notice strong {
+  display: block;
+  font-size: 12px;
+  color: #38bdf8;
+  margin-bottom: 3px;
+}
+.msp-hierarchy-notice p {
+  margin: 0;
+  font-size: 12px;
+  color: #cbd5e1;
+  line-height: 1.5;
+}
+
+/* Status Pills & Tags */
+.status-pill {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.status-pill.active {
+  background: rgba(34, 197, 94, 0.15);
+  color: #86efac;
+}
+.status-pill.archived {
+  background: rgba(148, 163, 184, 0.15);
+  color: #94a3b8;
+}
+.status-pill.pending {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fde68a;
+}
+.status-pill.approved {
+  background: rgba(34, 197, 94, 0.15);
+  color: #86efac;
+}
+.status-pill.rejected {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+}
+.role-badge.owner {
+  background: #bbf451;
+  color: #0b1730;
+}
+.role-badge.admin {
+  background: #38bdf8;
+  color: #0b1730;
+}
+.role-badge.participant {
+  background: #334155;
+  color: #f1f5f9;
+}
+
+.audit-action-tag {
+  background: #0b1730;
+  border: 1px solid #1e356d;
+  color: #e2e8f0;
+  font-family: monospace;
+  font-size: 11px;
+  padding: 3px 7px;
+  border-radius: 4px;
+}
+
+.admin-dialog {
+  max-width: 520px;
+  background: #132247;
+  border: 1px solid #1e356d;
+  border-radius: 12px;
+  color: #fff;
+  padding: 24px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+}

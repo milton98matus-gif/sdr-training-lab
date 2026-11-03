@@ -13,12 +13,27 @@ const Training=(()=>{
  function notify(){for(const f of listeners)f();}
  function legacy(){return !!localRead('sdr-lab-v1')?.history?.length||scopes.some(s=>{const v=localRead(s);return s===scopes[0]?Object.keys(v?.firsts||{}).length>0:Object.values(v?.sessions||{}).some(r=>r.history?.length);});}
  async function initialize(){
-  try{const r=await api('/api/session');user=r.user;ai=r.ai||{enabled:false};snapshots=r.snapshots||{};pending=localRead(keyFor('training-pending-events'))||[];
-   for(const scope of scopes)if(snapshots[scope]){const existing=localRead(keyFor(scope));const merged=merge(scope,snapshots[scope],existing);localStorage.setItem(keyFor(scope),JSON.stringify(merged));if(existing)save(scope,merged);}
-   document.querySelector('.sidebar-bottom').innerHTML=`<span class="avatar">${safe(user.name.slice(0,1).toUpperCase())}</span><div>${safe(user.name)}<small>${user.role==='owner'?'Owner':user.role==='admin'?'Admin':'Learner'}${user.organization?' · '+safe(user.organization):''}</small></div>`;
+  try{const r=await api('/api/session');if(!r?.user?.id)throw new Error('Not authenticated');user=r.user;ai=r.ai||{enabled:false};snapshots=r.snapshots||{};pending=localRead(keyFor('training-pending-events'))||[];
+   for(const scope of scopes){
+    const existing=localRead(keyFor(scope));
+    if(snapshots[scope]){
+     const merged=merge(scope,snapshots[scope],existing);
+     localStorage.setItem(keyFor(scope),JSON.stringify(merged));
+     if(existing)save(scope,merged);
+    }else if(existing){
+     save(scope,existing);
+    }
+   }
+   const ledger=localRead(keyFor('training-event-ledger'))||[];
+   if(ledger.length > (r.eventCount||0)){
+    const pendingIds=new Set(pending.map(p=>p.id));
+    for(const ev of ledger)if(!pendingIds.has(ev.id))pending.push(ev);
+    storeQueue();
+   }
+   const sideEl=document.querySelector('.sidebar-bottom');if(sideEl)sideEl.innerHTML=`<span class="avatar">${safe(user.name.slice(0,1).toUpperCase())}</span><div class="sidebar-user-block"><span class="sidebar-user-name">${safe(user.name)}</span></div><span class="status-dot" title="Active session"></span>`;
    document.querySelectorAll('[data-admin-only]').forEach(el=>el.hidden=!['owner','admin'].includes(user.role));
    banner(`<span><strong>${safe(user.name)}</strong> <span id="account-sync">Progress saved to your profile</span></span><span>${legacy()?'<button class="text-button" data-training="import">Import earlier browser practice</button>':''}<a href="/logout" target="_top">Sign out</a></span>`);
-   document.querySelector('.footer-copy').textContent='SDR Lab · Private training records · No external analytics';
+   const foot=document.querySelector('.footer-copy');if(foot)foot.textContent='L&D-SDRlab · Private learning & development environment · Osprey Strategic Research';
    flush();
   }catch{online=false;window.location.href='/login';}
   notify();
@@ -30,7 +45,19 @@ const Training=(()=>{
  }
  async function writeScope(scope){if(savingScopes.has(scope)||!dirtyScopes.has(scope))return;const entry=dirtyScopes.get(scope);savingScopes.add(scope);saveCount++;status();let failed=false;try{await api('/api/state',{method:'PUT',body:JSON.stringify({scope,...entry})});if(dirtyScopes.get(scope)===entry)dirtyScopes.delete(scope);online=true;}catch{online=false;failed=true;}finally{savingScopes.delete(scope);saveCount--;status();if(dirtyScopes.has(scope)){clearTimeout(timers[scope]);timers[scope]=setTimeout(()=>writeScope(scope),failed?5000:0);}}}
  function retrySync(){flush();for(const scope of dirtyScopes.keys())writeScope(scope);}
- function event(value){if(!user)return null;const entry={id:crypto.randomUUID(),at:Date.now(),...value};pending.push(entry);storeQueue();flush();return entry.id;}
+ function event(value){
+  if(!user)return null;
+  const entry={id:crypto.randomUUID(),at:Date.now(),...value};
+  pending.push(entry);
+  storeQueue();
+  try{
+   const ledger=(localRead(keyFor('training-event-ledger'))||[]).slice(-499);
+   ledger.push(entry);
+   localStorage.setItem(keyFor('training-event-ledger'),JSON.stringify(ledger));
+  }catch{}
+  flush();
+  return entry.id;
+ }
  function flush(){if(flushPromise)return flushPromise;if(!user||!pending.length)return Promise.resolve();flushPromise=(async()=>{busy=true;status();try{while(pending.length){const batch=pending.slice(0,30);await api('/api/events',{method:'POST',body:JSON.stringify({events:batch})});pending=pending.slice(batch.length);storeQueue();}online=true;}catch{online=false;}finally{busy=false;status();}})().finally(()=>{flushPromise=null;});return flushPromise;}
  function view(unitType,unitId){if(!user)return;const key=unitType+':'+unitId;if(key===lastView)return;lastView=key;event({kind:'view',unitType,unitId});}
  function importDialog(){let d=document.querySelector('#training-import');if(!d){d=document.createElement('dialog');d.id='training-import';d.innerHTML='<h2>Import your earlier practice?</h2><p>Browser practice may include activity completed by someone else on this device. Import only if these decisions and calls are yours.</p><p>Expanded-bank and Call Lab results will be labeled as browser imports. They do not prove when the original training happened. The earlier 18-case edition stays in this browser as a separate archive.</p><div class="dialog-actions"><button class="button secondary" data-training="cancel-import">Cancel</button><button class="button accent" data-training="confirm-import">This practice is mine · Import</button></div>';document.body.append(d);}d.showModal();}
@@ -40,7 +67,7 @@ const Training=(()=>{
  });
  window.addEventListener('online',retrySync);
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')retrySync();});
- function setUser(value){if(!user||value.id!==user.id)return;user={...user,...value};const side=document.querySelector('.sidebar-bottom');if(side)side.innerHTML=`<span class="avatar">${safe(user.name.slice(0,1).toUpperCase())}</span><div>${safe(user.name)}<small>${user.role==='owner'?'Site owner':user.role==='admin'?'Training administrator':'SDR trainee'}</small></div>`;const label=document.querySelector('#account-status strong');if(label)label.textContent=user.name;}
+ function setUser(value){if(!user||value.id!==user.id)return;user={...user,...value};const side=document.querySelector('.sidebar-bottom');if(side)side.innerHTML=`<span class="avatar">${safe(user.name.slice(0,1).toUpperCase())}</span><div class="sidebar-user-block"><span class="sidebar-user-name">${safe(user.name)}</span></div><span class="status-dot" title="Active session"></span>`;const label=document.querySelector('#account-status strong');if(label)label.textContent=user.name;}
  const ready=initialize();
  return {ready,setUser,keyFor,save,event,view,api,flush,get user(){return user;},get ai(){return ai;},get synced(){return online&&!busy&&!pending.length&&!saveCount&&!dirtyScopes.size;}};
 })();

@@ -90,7 +90,7 @@ export function renderLoginPage(error = '') {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Sign In · SDR Training Lab · OSR Manage</title>
+  <title>Sign In · L&D-SDRlab · OSR Manage</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body { background-color: #0b1730; color: #f0f4f8; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
@@ -127,8 +127,11 @@ export function renderLoginPage(error = '') {
 <body>
   <div class="card">
     <div class="header">
-      <div class="brand">SDR<span>lab</span></div>
-      <div class="subtitle">OSR Manage · Private Access</div>
+      <div style="display:inline-flex;align-items:center;background:#ffffff;padding:6px 14px;border-radius:8px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,0.15);border:1px solid #cbd5e1;">
+        <img src="/lab/assets/osr-navy.png" alt="OSR" style="height:22px;width:auto;display:block;">
+      </div>
+      <div class="brand">L&amp;D-SDR<span>lab</span></div>
+      <div class="subtitle">OSR Manage · Private Access · Sales Development Learning &amp; Readiness</div>
     </div>
 
     <div id="status" class="status-msg ${error ? 'error' : ''}">${error}</div>
@@ -314,6 +317,12 @@ export function createServer({ db, ownerEmail = OWNER_EMAIL, adminEmails = ADMIN
         if (!creds) {
           res.writeHead(401, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ ok: false, error: 'Account not found. Please contact your administrator for access.' }));
+          return;
+        }
+
+        if (creds.is_active === 0) {
+          res.writeHead(403, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: 'This account has been deactivated. Please contact your administrator.' }));
           return;
         }
 

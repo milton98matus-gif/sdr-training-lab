@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import readline from 'node:readline';
 
 const PY_WORKER_SCRIPT = `
@@ -41,9 +41,6 @@ for line in sys.stdin:
         elif cmd == 'run':
             sql = req['sql']
             cur.execute(sql, args)
-            if not in_transaction and not sql.strip().upper().startswith('SELECT'):
-                # In autocommit mode (isolation_level=None), DML automatically commits
-                pass
             print(json.dumps({'id': req_id, 'ok': True, 'changes': cur.rowcount}))
         elif cmd == 'get':
             sql = req['sql']
@@ -79,13 +76,17 @@ export class DatabaseSync {
       ? `/tmp/sdr_mem_${Date.now()}_${Math.random().toString(36).slice(2)}.sqlite`
       : dbPath;
 
-    // Start persistent Python SQLite worker
+    this.worker = null;
+    this.pendingCallbacks = new Map();
+    this.nextReqId = 1;
+  }
+
+  _ensureWorker() {
+    if (this.worker) return;
+
     this.worker = spawn('python3', ['-u', '-c', PY_WORKER_SCRIPT, this.diskFile], {
       stdio: ['pipe', 'pipe', 'inherit']
     });
-
-    this.pendingCallbacks = new Map();
-    this.nextReqId = 1;
 
     const rl = readline.createInterface({ input: this.worker.stdout });
     rl.on('line', (line) => {
@@ -107,10 +108,12 @@ export class DatabaseSync {
         cb({ ok: false, error: `Worker exited with code ${code}` });
       }
       this.pendingCallbacks.clear();
+      this.worker = null;
     });
   }
 
   _send(cmd, payload) {
+    this._ensureWorker();
     return new Promise((resolve, reject) => {
       const id = this.nextReqId++;
       this.pendingCallbacks.set(id, (res) => {
@@ -125,20 +128,38 @@ export class DatabaseSync {
     });
   }
 
-  // Synchronous-like bridge for DatabaseSync interface:
-  // Since db.mjs wraps in async functions, we can provide async methods directly!
   exec(sql) {
-    // For DDL execution on startup, use sync child_process
+    // If worker is running, send directly to worker so connection stays in sync
+    if (this.worker) {
+      if (sql.trim().toUpperCase() === 'BEGIN' || sql.trim().toUpperCase() === 'COMMIT' || sql.trim().toUpperCase() === 'ROLLBACK') {
+        return this._send('exec', { sql });
+      }
+      // For general DDL, close worker temporarily and restart so schema refreshes
+      this.worker.kill();
+      this.worker = null;
+    }
+
     const py = `
-import sqlite3
+import sys, sqlite3
 conn = sqlite3.connect('${this.diskFile}')
-conn.executescript('''${sql.replace(/'/g, "\\'")}''')
+try:
+    conn.executescript(sys.stdin.read())
+except Exception as e:
+    err_str = str(e).lower()
+    if 'already exists' not in err_str and 'duplicate column' not in err_str:
+        sys.stderr.write(str(e))
+        sys.exit(1)
 conn.close()
 `;
-    const res = spawnSync('python3', ['-c', py], { encoding: 'utf8' });
+    const res = spawnSync('python3', ['-c', py], {
+      input: sql,
+      encoding: 'utf8',
+      maxBuffer: 20 * 1024 * 1024
+    });
+
     if (res.error) throw res.error;
-    if (res.status !== 0 && !res.stderr.includes('already exists')) {
-      throw new Error(res.stderr);
+    if (res.status !== 0) {
+      throw new Error(res.stderr || 'SQLite DDL execution error');
     }
   }
 
@@ -166,12 +187,13 @@ conn.close()
 
   close() {
     try {
-      this.worker.kill();
+      if (this.worker) {
+        this.worker.kill();
+        this.worker = null;
+      }
       if (this.dbPath === ':memory:' && fs.existsSync(this.diskFile)) {
         fs.unlinkSync(this.diskFile);
       }
     } catch {}
   }
 }
-
-import { spawnSync } from 'node:child_process';

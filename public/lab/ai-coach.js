@@ -18,7 +18,7 @@ const AICoach=(()=>{
  function attempt(el){return {source:el.dataset.aiSource,eventId:el.dataset.aiEvent,userId:el.dataset.aiUser||'',generate:el.dataset.aiAuto==='yes'};}
  function paint(a,r){cache.set(key(a),r);for(const el of matching(a))render(el,r);}
  async function work(a){
-  await Training.ready;if(!Training.user){paint(a,{state:'signed_out',message:'Sign in with your authorized ChatGPT account to save this attempt and receive AI coaching.'});return;}
+  await Training.ready;if(!Training.user){paint(a,{state:'signed_out',message:'Sign in with your authorized account to save this attempt and receive AI coaching.'});return;}
   paint(a,{state:'loading'});
   try{
    let r;

@@ -16,7 +16,9 @@ const TABLES = [
   'training_time_buckets',
   'training_section_time_buckets',
   'training_game_runs',
-  'training_events'
+  'training_events',
+  'training_audit_log',
+  'training_profile_change_requests'
 ];
 
 let cachedGistId = process.env.GITHUB_GIST_ID || null;
