@@ -584,8 +584,8 @@ const Reporting = (() => {
           <small>${dt(p.report?.activity?.lastSubmitted)}</small>
         </td>
         <td>
-          <strong>${p.report?.presence?.sessions ? PortalTime.duration(p.report.presence.connectedMs) : 'Not recorded'}</strong>
-          <small>Interaction: ${p.report?.presence?.sessions ? PortalTime.duration(p.report.presence.interactionMs) : '—'}</small>
+          <strong>${(p.report?.presence?.connectedMs || p.report?.presence?.sessions) ? PortalTime.duration(p.report?.presence?.connectedMs || 0) : 'Not recorded'}</strong>
+          <small>Interaction: ${(p.report?.presence?.interactionMs || p.report?.presence?.sessions) ? PortalTime.duration(p.report?.presence?.interactionMs || 0) : '—'}</small>
           <small>${h(p.report?.presence?.status || 'Not recorded yet')}</small>
         </td>
         <td>
