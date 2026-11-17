@@ -9,11 +9,11 @@ const ONBOARDING={
       "cards": [
         {
           "title": "OSR Manage",
-          "body": "OSR helps MSPs and channel partners build and improve sales through recruiting, training, sales management, coaching, and sales processes. Its work supports the people and systems that grow an MSP’s business."
+          "body": "Osprey Strategic Research (OSR) helps Managed Service Providers (MSPs) and channel partners build and improve sales through recruiting, training, sales management, coaching, and sales processes. Its work supports the people and systems that grow an MSP’s business."
         },
         {
           "title": "GSD Staffing",
-          "body": "GSD connects U.S. and Canadian businesses with vetted professionals in Latin America. Roles include virtual assistance, technical support, marketing, and sales operations. Nearshore collaboration supports teams working in similar time zones."
+          "body": "Global Service Delivery (GSD) Staffing connects U.S. and Canadian businesses with vetted professionals in Latin America. Roles include virtual assistance, technical support, marketing, and sales operations. Nearshore collaboration supports teams working in similar time zones."
         },
         {
           "title": "How the pieces connect",
@@ -69,7 +69,7 @@ const ONBOARDING={
       "cards": [
         {
           "title": "The SDR outcome",
-          "body": "Your goal is a relevant discovery appointment when the contact is receptive and there is a credible reason to talk. Routing, an agreed callback, a limited email handoff, or a respectful exit can also be the right next step."
+          "body": "As a Sales Development Representative (SDR), your goal is a relevant discovery appointment when the contact is receptive and there is a credible reason to talk. Routing, an agreed callback, a limited email handoff, or a respectful exit can also be the right next step."
         },
         {
           "title": "Your lane",
@@ -129,7 +129,7 @@ const ONBOARDING={
       "cards": [
         {
           "title": "Managed Service Provider",
-          "body": "An MSP provides ongoing management and support for agreed parts of a customer’s technology. That can include people’s devices, business systems, networks, cloud services, and security. The agreement defines responsibilities, service hours, exclusions, and how work is requested."
+          "body": "A Managed Service Provider (MSP) provides ongoing management and support for agreed parts of a customer’s technology. That can include people’s devices, business systems, networks, cloud services, and security. The agreement defines responsibilities, service hours, exclusions, and how work is requested."
         },
         {
           "title": "Fully managed, co-managed, break/fix",
@@ -137,7 +137,7 @@ const ONBOARDING={
         },
         {
           "title": "Tools support delivery",
-          "body": "RMM helps a provider monitor and manage devices remotely. A PSA helps organize service work, tickets, and related business processes. Owning a tool or license is different from assigning people to monitor, respond, escalate, and follow through."
+          "body": "Remote Monitoring and Management (RMM) helps a provider monitor and manage devices remotely. A Professional Services Automation (PSA) platform helps organize service work, tickets, and related business processes. Owning a tool or license is different from assigning people to monitor, respond, escalate, and follow through."
         }
       ],
       "scene": "“We already have someone who fixes computers, and our office manager calls them when something breaks.”",
@@ -201,7 +201,7 @@ const ONBOARDING={
         },
         {
           "title": "Planning and change",
-          "body": "Some MSPs provide technology roadmaps, budgeting support, lifecycle planning, projects, or strategic guidance such as vCIO services. Do not assume every MSP offers everything on this map. Use your assigned brief to confirm the actual portfolio."
+          "body": "Some MSPs provide technology roadmaps, budgeting support, lifecycle planning, projects, or strategic guidance such as Virtual Chief Information Officer (vCIO) services. Do not assume every MSP offers everything on this map. Use your assigned brief to confirm the actual portfolio."
         }
       ],
       "scene": "“We’re not shopping for cybersecurity. We need our new employees productive faster.”",
@@ -257,7 +257,7 @@ const ONBOARDING={
         },
         {
           "title": "Response is not resolution",
-          "body": "An SLA defines service commitments in an agreement. A response target means acknowledgment or the agreed initial action; it is not automatically a fixed-time repair. Ask how issues are handled today without promising a resolution time."
+          "body": "A Service Level Agreement (SLA) defines service commitments in an agreement. A response target means acknowledgment or the agreed initial action; it is not automatically a fixed-time repair. Ask how issues are handled today without promising a resolution time."
         },
         {
           "title": "Coverage has several meanings",
@@ -443,7 +443,7 @@ const ONBOARDING={
         },
         {
           "title": "Recovery expectations",
-          "body": "RPO concerns how much data loss is tolerable, expressed as a time window. RTO concerns the target time to restore operations. You can ask which workflows must resume first and how long the business can reasonably operate without them; specialists validate technical targets."
+          "body": "Recovery Point Objective (RPO) concerns how much data loss is tolerable, expressed as a time window. Recovery Time Objective (RTO) concerns the target time to restore operations. You can ask which workflows must resume first and how long the business can reasonably operate without them; specialists validate technical targets."
         },
         {
           "title": "Continuity is a business conversation",
@@ -633,25 +633,25 @@ const ONBOARDING={
         },
         {
           "title": "Confirm the offer",
-          "body": "Before describing an assessment as free or no-obligation, verify fees, eligibility, scope, deliverables, and any commitments. Discovery can clarify these terms with the right person. Accepting a discovery meeting is not authorization to access or test systems."
+          "body": "Know from your campaign brief whether the client’s assessment is paid or free before making the call—for example, Athens Micro only offers paid assessments. State the fee structure clearly, then sell why taking the discovery appointment is still worth their time to review scope and priorities."
         }
       ],
-      "scene": "“If we do a third-party assessment, will you charge us?” The campaign brief does not state the terms.",
+      "scene": "“If we do a third-party assessment, will you charge us?” Your campaign brief states this client only offers paid assessments.",
       "questions": [
         {
           "prompt": "What is the responsible next response?",
           "options": [
             {
-              "text": "It is always free.",
-              "why": "The campaign has not approved that promise."
+              "text": "It is always free for qualified prospects.",
+              "why": "Contradicts the campaign brief and misleads the prospect."
             },
             {
               "text": "Agree to begin scanning now and discuss costs later.",
               "why": "Neither access nor testing has been authorized."
             },
             {
-              "text": "I do not have confirmed assessment terms; the discovery contact can clarify scope and any fees before you decide.",
-              "why": "Be honest and establish the correct decision point."
+              "text": "This client only offers paid assessments, and taking a 15-minute discovery appointment lets you confirm whether the scope and ROI justify that investment before committing.",
+              "why": "State upfront whether the assessment is paid or free, then sell why taking the appointment is valuable."
             }
           ],
           "answer": 2

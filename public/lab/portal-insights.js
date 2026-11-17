@@ -1,7 +1,7 @@
 'use strict';
 const PortalInsights = (() => {
   const h = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const date = v => v ? new Date(v).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/Managua' }) : 'No submission yet';
+  const date = v => v ? new Date(v).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/New_York' }) : 'No submission yet';
   const msp = p => ['owner', 'admin'].includes(p?.role) ? 'OSR Manage (Leadership)' : (p?.profile?.approvedMsp || p?.profile?.requestedMsp || p?.report?.onboarding?.briefMspName || 'Unassigned');
   const fallback = p => ({ status: p?.report?.onboarding?.status || 'Not started', reasons: [], nextAction: p?.report?.onboarding?.nextRecommendation || 'Review the next required activity' });
 
@@ -180,7 +180,7 @@ const PortalInsights = (() => {
 
 const PortalTime = (() => {
   const h = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const date = t => t == null ? 'Not recorded' : new Date(t).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/Managua' });
+  const date = t => t == null ? 'Not recorded' : new Date(t).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/New_York' });
   const duration = ms => {
     const n = Math.max(0, Math.round((ms || 0) / 1000));
     const hours = Math.floor(n / 3600);
@@ -208,7 +208,7 @@ const PortalTime = (() => {
   function setBounds() {
     periodEnd = Date.now();
     if (period === 'all') periodStart = null;
-    else if (period === 'today') periodStart = Date.parse(new Date(periodEnd - 21600000).toISOString().slice(0, 10) + 'T00:00:00-06:00');
+    else if (period === 'today') periodStart = Date.parse(new Date(periodEnd - 18000000).toISOString().slice(0, 10) + 'T00:00:00-05:00');
     else periodStart = periodEnd - Number(period) * 86400000;
   }
 
@@ -221,7 +221,7 @@ const PortalTime = (() => {
   function breakdown() {
     if (!analytics || !Array.isArray(analytics.daily)) return '';
     const max = Math.max(60000, ...analytics.daily.map(d => d.connectedMs || 0));
-    return '<section class="portal-daily"><div class="report-section-heading"><div><span class="eyebrow">DAILY DETAIL</span><h3>Time and submitted work, side by side.</h3></div><button class="text-button" data-portal-time="daily-csv">Export daily CSV ↓</button></div><p class="ob-caption">' + (period === 'all' ? 'Daily detail shows the last 14 days.' : 'Selected date window.') + ' Nicaragua time.</p><div class="portal-chart-key"><span><i></i>Observed connection</span><span><i></i>Interaction estimate</span></div><div class="portal-day-chart">' + analytics.daily.slice(-14).map(d => '<div class="portal-day"><span>' + h(d.day.slice(5)) + '</span><div class="portal-day-track" aria-hidden="true"><span style="width:' + Math.min(100, (d.connectedMs || 0) / max * 100) + '%"></span><i style="width:' + Math.min(100, (d.interactionMs || 0) / max * 100) + '%"></i></div><strong>' + duration(d.connectedMs) + '</strong><small>' + (d.submissions || 0) + ' submissions</small></div>').join('') + '</div></section>';
+    return '<section class="portal-daily"><div class="report-section-heading"><div><span class="eyebrow">DAILY DETAIL</span><h3>Time and submitted work, side by side.</h3></div><button class="text-button" data-portal-time="daily-csv">Export daily CSV ↓</button></div><p class="ob-caption">' + (period === 'all' ? 'Daily detail shows the last 14 days.' : 'Selected date window.') + ' Eastern Standard Time (EST).</p><div class="portal-chart-key"><span><i></i>Observed connection</span><span><i></i>Interaction estimate</span></div><div class="portal-day-chart">' + analytics.daily.slice(-14).map(d => '<div class="portal-day"><span>' + h(d.day.slice(5)) + '</span><div class="portal-day-track" aria-hidden="true"><span style="width:' + Math.min(100, (d.connectedMs || 0) / max * 100) + '%"></span><i style="width:' + Math.min(100, (d.interactionMs || 0) / max * 100) + '%"></i></div><strong>' + duration(d.connectedMs) + '</strong><small>' + (d.submissions || 0) + ' submissions</small></div>').join('') + '</div></section>';
   }
 
   function render() {
@@ -268,6 +268,35 @@ const PortalTime = (() => {
       if (token === generation) { busy = false; render(); }
     }
   }
+
+
+  function exportDailyCsv() {
+    if (!analytics || !Array.isArray(analytics.daily)) return;
+    const rowsData = period === 'all' ? analytics.daily.slice(-14) : analytics.daily;
+    const header = ['Date (EST)', 'Connected Time', 'Connected (min)', 'Visible & Focused Time', 'Visible (min)', 'Recent Interaction Time', 'Interaction (min)', 'Sessions', 'Submissions'];
+    const mins = ms => ((Number(ms) || 0) / 60000).toFixed(2);
+    const body = rowsData.map(d => [
+      d.day || '',
+      duration(d.connectedMs),
+      mins(d.connectedMs),
+      duration(d.visibleMs),
+      mins(d.visibleMs),
+      duration(d.interactionMs),
+      mins(d.interactionMs),
+      d.sessions || 0,
+      d.submissions || 0
+    ]);
+    const stamp = new Date(Date.now() - 18000000).toISOString().slice(0, 10);
+    const who = (user || 'participant').replace(/[^a-z0-9_-]+/gi, '_');
+    PortalInsights.download('sdr-lab-daily-' + who + '-' + stamp + '.csv', [header, ...body]);
+  }
+
+  document.addEventListener('click', e => {
+    const btn = e.target.closest('[data-portal-time="daily-csv"]');
+    if (!btn) return;
+    e.preventDefault();
+    exportDailyCsv();
+  });
 
   function mount(targetUser, selectedDays = 'all', bounds = null) {
     user = targetUser;

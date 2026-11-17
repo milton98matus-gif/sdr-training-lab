@@ -45,9 +45,9 @@ const CALL_LAB_DATA=(()=>{
   },
  },{
   id:'covered',number:'02',title:'“We’re already covered.”',tag:'Positioning & boundaries',duration:'1–6 decisions',company:'Harbor Accounting',person:'Taylor · Office manager',initials:'TM',color:'coral',
-  summary:'Microsoft 365 and MFA are in place. The next question has to earn its place.',
+  summary:'Microsoft 365 and Multi-Factor Authentication (MFA) are in place. The next question has to earn its place.',
   brief:'Fictional 30-person accounting business. The office manager answers. Support ownership, unmet needs, and interest in a second opinion are not yet known.',
-  approved:'The training MSP offers support, cloud services, and security services. A specialist can discuss an independent review; eligibility, deliverables, and any fees have not been confirmed. Do not claim the prospect is vulnerable or that an assessment is free.',
+  approved:'The training MSP offers support, cloud services, and security services. Per this campaign brief, third-party assessments are paid engagements. State whether the assessment is paid or free upfront, then sell why taking the discovery appointment is worth their time.',
   opening:'Hi Taylor, Alex here with an IT services provider. We help with day-to-day support, cloud services, and security. How is IT supported at your office?',start:'m365',nodes:{
    m365:n('Connect','We use Microsoft 365 and two-step verification. We’re already covered.','Positioning',[
     c('Acknowledge and clarify scope','That’s helpful context. Who handles day-to-day support and cloud changes when your team needs help?','support','supported','Acknowledges the existing controls and explores broader IT ownership without making a security diagnosis.'),
@@ -67,7 +67,7 @@ const CALL_LAB_DATA=(()=>{
     c('Clarify once, without arguing','Understood. Is the backlog something you want to address another way, or is it acceptable for now?','covered','supported','Uses one proportionate clarification to understand whether any relevant need remains.'),
     c('Repackage the same offer','It’s not really co-management if we call it support coverage.','firm','gap','Renames a rejected offer instead of respecting the stated preference.')]),
    impact:n('Relate','New employee access waits a few days. It holds up client work. We’d be open to a second opinion, but are you going to charge us for an assessment?','Positioning',[
-    c('Be precise about what is unknown','I can’t confirm assessment fees or eligibility. Would a discovery call to discuss the access delays and clarify review scope and any costs be useful?','willing','supported','Relates to the stated impact and offers discovery while clearly identifying unconfirmed assessment terms.'),
+    c('Be precise about what is unknown','Our assessments are paid engagements, not free scans. That is exactly why a 15-minute discovery call is worthwhile—you can review your onboarding delays with a specialist and see whether the scope and value justify an assessment before committing.','willing','supported','States clearly that the assessment is paid per the campaign brief and sells why the discovery appointment is valuable.'),
     c('Call the assessment free','It’s free and there’s no obligation. Let’s book it.','fees','gap','Promises assessment terms that the approved brief does not verify.')]),
    fees:n('Recover','Where does it say it’s free? I don’t want a surprise bill.','Agreement & handoff',[
     c('Correct the claim','I shouldn’t have said it was free. Those terms aren’t confirmed. We can first discuss scope and fees in discovery without authorizing an assessment. Would that be useful?','willing','supported','Retracts the invented fee promise and separates a discovery appointment from assessment authorization.'),
@@ -120,6 +120,40 @@ const CALL_LAB_DATA=(()=>{
    excluded:end('Thank you. Goodbye.','exclude','Exclusion is a distinct outcome.','Explicit request: remove the company from outreach and do not email. End the pitch and follow the organization’s exclusion process. No nurture, alternate-channel outreach, or recycle-based recontact. Record the request accurately; process completion is not verified by the call alone.'),
    breach:end('No. Do not contact us again.','exclude','The request must be honored.','The contact explicitly prohibits further outreach. Correct any proposed recycle or future-contact plan and follow the exclusion process. The SDR’s stated recontact intention is a critical boundary gap. Completion of suppression must be verified separately.')
   },
+ }
+ ,{
+  id:'all-set',number:'04',title:'“We’re all set.”',tag:'Objection handling',duration:'1–5 decisions',
+  company:'Crestline Logistics',person:'Jordan · Operations Director',initials:'JL',color:'teal',
+  summary:'Handle the most common brush-off by checking vendor tenure, AI security audits, and contract renewal timing.',
+  brief:'Fictional 45-person logistics company. The operations director gives the classic “We’re all set” brush-off. Use the approved tenure, 3rd-party AI security audit, and contract renewal handler.',
+  approved:'Acknowledge the brush-off, ask how long they have been with their current vendor, pivot to a 3rd-party IT audit for new AI security issues if over 2–3 years, and capture their contract renewal window if they decline an immediate audit.',
+  opening:'Hi Jordan, Alex calling with an IT Managed Service Provider (MSP). I wanted to briefly introduce our team—how are things going with your current IT setup?',
+  start:'brushoff',
+  nodes:{
+   brushoff:n('Connect','Thanks, but we already have an IT provider. We’re all set.','Objection handling',[
+    c('End the call immediately','Okay, sorry to bother you. Have a great day.','dropped','gap','Accepts the reflex brush-off without checking vendor tenure or future renewal timing.'),
+    c('Ask about current vendor tenure','I understand—how long have you been with your current vendor?','tenure','supported','Acknowledges their response smoothly and opens a non-confrontational question to gauge tenure.'),
+    c('Attack their current provider','Most companies say that until their provider misses a major outage.','defensive','gap','Creates immediate defensiveness by criticizing an incumbent without any evidence.')]),
+   defensive:n('Recover','Our provider has been fine. Why are you assuming they are missing things?','Listening & boundaries',[
+    c('Reset and ask tenure','Fair point—I didn’t mean to assume anything. Out of curiosity, how long have you been working with them?','tenure','supported','Repairs the tone and returns to the approved tenure question.'),
+    c('Double down on criticism','Because every incumbent gets complacent after year one.','firm_exit','gap','Argues with the prospect instead of earning permission to continue.')]),
+   tenure:n('Discover','We’ve been with them for about three and a half years now.','Objection handling',[
+    c('Pivot to AI security and 3rd-party audit','With all the new AI security issues, when was the last time you had a 3rd-party audit of your IT?','audit_check','supported','Uses the 2–3+ year tenure trigger to introduce an objective 3rd-party IT audit around emerging AI security risks.'),
+    c('Push for an immediate switch','Three years is too long. You should switch to us this quarter.','firm_exit','gap','Demands replacement without establishing a reason or timing.')]),
+   audit_check:n('Qualify','Honestly, we haven’t had a 3rd-party audit since we signed with them.','Value & renewal timing',[
+    c('Pitch speed of technology & ask renewal date','Technology seems to change at the speed of light. What was a great deal 2 years ago may not be the best value next year. What I’d like to do is find out when your contract is coming up for renewal and I’ll contact you around then. That way, I can show you the value we bring to the table when you’re reviewing your current contract. You may find that you’re still all set, but maybe there’s new value out there that could help your business. When does your contract come up for renewal?','renewal_window','supported','Delivers the exact value-focused renewal handler: respects their current relationship while positioning a future apples-to-apples comparison.'),
+    c('Offer a 3rd-party audit path','If you are open to a fresh set of eyes sooner, we can discuss how our team conducts a 3rd-party IT audit.','audit_interest','partial','Good fallback if they express immediate audit interest, though capturing the contract renewal date is key when they are not ready yet.')]),
+   audit_interest:n('Advance','Actually, an audit before our busy season might be smart. Could we see how that works?','Agreement & handoff',[
+    c('Book a 15-minute discovery call to discuss audit scope','Absolutely. Let’s set a 15-minute discovery call so our specialist can walk through how our audit works, scope, and fees. Does Thursday at 10 a.m. work?','booked_audit','supported','Converts audit interest into a clear, scoped discovery appointment.'),
+    c('Promise an immediate free scan','Great, I’ll have our engineers run a free scan tomorrow.','firm_exit','gap','Promises unauthorized technical testing and unverified free terms.')]),
+   renewal_window:n('Advance','Our agreement renews in September next year. You can reach back out in July when we review vendors.','Agreement & handoff',[
+    c('Confirm the July follow-up window','July works great. I’ll note your September renewal and reach back out in July so you have a clear benchmark when you review options. Thanks, Jordan.','nurtured','supported','Locks in the exact Contract Expiration Date (CED) and vendor-review follow-up window respectfully.'),
+    c('Push for a meeting this week anyway','Why wait until July? Let’s meet this Friday.','firm_exit','gap','Ignores the agreed review window and creates unnecessary friction.')]),
+   dropped:end('Alright, goodbye.','close','Missed the brush-off handler.','Accepting “We’re all set” at face value misses vendor tenure, 3rd-party AI security audit opportunities, and the contract renewal window.'),
+   firm_exit:end('We’re not interested. Please take us off your list.','exclude','Pressure triggered an opt-out.','Pushing without permission or attacking the incumbent turned a routine brush-off into a firm refusal.'),
+   booked_audit:end('Thursday at 10 a.m. Eastern works. Send the invite to my work email.','book','Audit interest converted to discovery.','Prospect agreed to a 15-minute discovery call on Thursday at 10 a.m. Eastern to discuss how a 3rd-party IT audit works, including scope and fees.'),
+   nurtured:end('Sounds good, talk to you in July.','nurture','Renewal window captured for nurture.','Recorded September contract renewal and agreed July follow-up window. The SDR turned a “We’re all set” brush-off into a qualified future benchmark.')
+  }
  }];
  // Vary answer placement; the recommended response is not always the first card.
  for(const call of calls)for(const [id,node]of Object.entries(call.nodes))if(!node.end){

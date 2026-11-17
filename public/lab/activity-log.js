@@ -1,7 +1,7 @@
 'use strict';
 const ActivityLog=(()=>{
  const h=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- const dt=t=>t?new Date(t).toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'America/Managua'}):'No submitted work yet';
+ const dt=t=>t?new Date(t).toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'America/New_York'}):'No submitted work yet';
  let person=null,period='all',cursor=null,items=[],summary=null,serial=0,busy=false,problem='',periodStart=null,periodEnd=null,reportRange=null;
  const host=()=>document.querySelector('#activity-log');
  const bounds=()=>{const p=new URLSearchParams();p.set('limit','5');if(person)p.set('user',person);if(periodStart!==null)p.set('from',String(periodStart));if(periodEnd!==null)p.set('to',String(periodEnd));return p;};

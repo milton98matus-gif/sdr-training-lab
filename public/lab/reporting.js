@@ -1,7 +1,7 @@
 'use strict';
 const Reporting = (() => {
   const h = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const dt = t => t ? new Date(t).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/Managua' }) : 'No practice recorded';
+  const dt = t => t ? new Date(t).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/New_York' }) : 'No practice recorded';
   
   let people = [], accounts = [], auditLogs = [], profileRequests = [];
   let query = '', topic = '', days = 'all', selected = null, loadingId = 0, requestedUser = null;
