@@ -32,7 +32,7 @@ const Training=(()=>{
    }
    const sideEl=document.querySelector('.sidebar-bottom');if(sideEl)sideEl.innerHTML=`<span class="avatar">${safe(user.name.slice(0,1).toUpperCase())}</span><div class="sidebar-user-block"><span class="sidebar-user-name">${safe(user.name)}</span></div><span class="status-dot" title="Active session"></span>`;
    document.querySelectorAll('[data-admin-only]').forEach(el=>el.hidden=!['owner','admin'].includes(user.role));
-   banner(`<span><strong>${safe(user.name)}</strong> <span id="account-sync">Progress saved to your profile</span></span><span>${legacy()?'<button class="text-button" data-training="import">Import earlier browser practice</button>':''}<a href="/logout" target="_top">Sign out</a></span>`);
+   banner(`<span><strong>${safe(user.name)}</strong> <span id="account-sync">Progress saved to your profile</span></span>${legacy()?'<span><button class="text-button" data-training="import">Import earlier browser practice</button></span>':''}`);
    const foot=document.querySelector('.footer-copy');if(foot)foot.textContent='L&D-SDRlab · Private learning & development environment · Osprey Strategic Research';
    flush();
   }catch{online=false;window.location.href='/login';}
@@ -67,7 +67,7 @@ const Training=(()=>{
  });
  window.addEventListener('online',retrySync);
  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')retrySync();});
- function setUser(value){if(!user||value.id!==user.id)return;user={...user,...value};const side=document.querySelector('.sidebar-bottom');if(side)side.innerHTML=`<span class="avatar">${safe(user.name.slice(0,1).toUpperCase())}</span><div class="sidebar-user-block"><span class="sidebar-user-name">${safe(user.name)}</span></div><span class="status-dot" title="Active session"></span>`;const label=document.querySelector('#account-status strong');if(label)label.textContent=user.name;}
+ function setUser(value){if(!user||value.id!==user.id)return;user={...user,...value};const label=document.querySelector('#account-status strong');if(label)label.textContent=user.name;}
  const ready=initialize();
  return {ready,setUser,keyFor,save,event,view,api,flush,get user(){return user;},get ai(){return ai;},get synced(){return online&&!busy&&!pending.length&&!saveCount&&!dirtyScopes.size;}};
 })();
