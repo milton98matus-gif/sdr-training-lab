@@ -1,0 +1,82 @@
+'use strict';
+const OPPORTUNITY_GAME={version:'1',missions:[
+ {id:'second-location',title:'A second location',skill:'Discovery',icon:'network',scene:'The operations manager says the current IT provider is fine, then mentions a new location opening in six weeks.',rounds:[
+  {title:'Catch the signal',quote:'“We are all set. We just have a lot going on with the new office.”',prompt:'What creates a reasonable opening?',criterion:'Listen for relevant information',options:[
+   {text:'The new office may change support needs. Ask how the opening is being handled.',points:2,why:'You use a concrete plan the contact volunteered. A change can create a useful conversation even when the current provider is valued.'},
+   {text:'A new office proves their provider cannot keep up.',points:0,why:'You turn a change into an unsupported problem. First find out how the work is covered.'},
+   {text:'Ask whether they are unhappy with IT.',points:1,why:'You are trying to discover a need, but the question ignores the specific plan they just shared.'}]},
+  {title:'Follow the answer',quote:'“Our IT lead is doing the setup and still handling everyone’s day-to-day requests.”',prompt:'Which question earns useful context?',criterion:'Discover before positioning',options:[
+   {text:'Would a lower monthly IT price help?',points:0,why:'The SDR does not quote prices, and price was not the issue raised. Explore the workload and its effect.'},
+   {text:'How is that split affecting the setup timeline or everyday support?',points:2,why:'You connect workload to a business outcome without assuming there is a failure.'},
+   {text:'How many computers do you have?',points:1,why:'Size can help qualify an account, but it does not follow the workload signal yet.'}]},
+  {title:'Earn a fitting next step',quote:'“We are concerned about the timeline. I could talk with someone about extra project capacity.”',prompt:'How would you close this moment?',criterion:'Agree a relevant discovery purpose',options:[
+   {text:'Offer a discovery conversation about the opening timeline and scope, confirm who should join, and agree a time.',points:2,why:'The contact welcomed a specific discussion. Confirm purpose, participants and timing, then let the discovery team validate scope.'},
+   {text:'Promise that the MSP will finish everything before opening day.',points:0,why:'Delivery dates require a scoped assessment by the responsible team. The SDR can arrange that discussion.'},
+   {text:'Email a brochure and leave the next step open.',points:1,why:'A brochure may help, but you have a welcomed discovery opening. Make the next action explicit.'}]}]},
+ {id:'m365-covered',title:'“We have Microsoft 365”',skill:'Positioning',icon:'cloud',scene:'A director says Microsoft 365 and two-step verification mean they already have everything covered.',rounds:[
+  {title:'Respect what is in place',quote:'“We have Microsoft 365 and two-step verification, so we do not need an MSP.”',prompt:'Choose a useful response.',criterion:'Position the broader service',options:[
+   {text:'Explain that those tools are useless without your MSP.',points:0,why:'That dismisses their investment and makes an unsupported technical claim.'},
+   {text:'Acknowledge the tools, then ask who handles user support, account changes and service coordination.',points:2,why:'You respect the setup and explore the broader operating model. MSP conversations can include support, cloud and coordination as well as security.'},
+   {text:'List every service your MSP might offer.',points:1,why:'The broader scope matters, but a service list creates little discovery. Start with how support is managed.'}]},
+  {title:'Use the business impact',quote:'“Our office manager handles access changes. New hires sometimes wait until the afternoon.”',prompt:'What should you explore next?',criterion:'Connect service to an outcome',options:[
+   {text:'What does that delay mean for a new hire’s first day, and how often does it happen?',points:2,why:'You explore impact and frequency before deciding whether onboarding support is relevant.'},
+   {text:'Recommend a particular technical configuration immediately.',points:0,why:'Detailed technical design belongs in discovery with the appropriate specialist.'},
+   {text:'Ask whether they would like better IT.',points:1,why:'It is a broad interest question. A question about the actual onboarding delay would produce better context.'}]},
+  {title:'Keep the promise honest',quote:'“Could your team take responsibility for onboarding support?”',prompt:'What can the SDR responsibly offer?',criterion:'Confirm scope before commitments',options:[
+   {text:'Guarantee zero waiting time for every new employee.',points:0,why:'An absolute outcome is unsupported. Response commitments depend on the approved agreement and process.'},
+   {text:'Say it is probably possible, then move straight to a demo.',points:1,why:'You avoid an absolute guarantee, but you still need a clear purpose and scope for the next discussion.'},
+   {text:'Connect the need to the approved support service and offer discovery to confirm responsibilities, process and coverage.',points:2,why:'You position a relevant service and make confirmation part of a meaningful next step.'}]}]},
+ {id:'vacation-email',title:'The boss is on vacation',skill:'Next steps',icon:'planning',scene:'A gatekeeper says the decision-maker is away and offers to pass along an email.',rounds:[
+  {title:'Work with the route',quote:'“My boss is on vacation. Send me something and I will pass it on.”',prompt:'What is a reasonable clarification?',criterion:'Respect the gatekeeper’s role',options:[
+   {text:'Ask for the boss’s personal mobile number.',points:0,why:'A private number is not needed to use the offered route. Respect the contact’s role and boundaries.'},
+   {text:'Thank them and ask what topic would make the message useful to the boss.',points:2,why:'You work with the offered route and try to make the message relevant.'},
+   {text:'Send a general brochure immediately.',points:1,why:'You follow the requested channel, but a brief clarification could make the email more useful.'}]},
+  {title:'Separate permission from assumption',quote:'“Include something about support coverage. She returns next Thursday.”',prompt:'How would you clarify follow-up?',criterion:'Seek an actual follow-up agreement',options:[
+   {text:'“Would a brief call the following week be useful, or would you prefer we leave the next move with her?”',points:2,why:'You offer a proportionate choice. A return date is context, not automatic permission to schedule a callback.'},
+   {text:'Add a calendar meeting for Thursday without asking.',points:0,why:'An absence date is not an accepted appointment.'},
+   {text:'Say that you will keep trying daily until she returns.',points:0,why:'Repeated calls do not follow the offered route or a welcomed agreement.'}]},
+  {title:'Honor the answer',quote:'“Please just send it. She will contact you if she wants to.”',prompt:'Choose the appropriate close.',criterion:'Document the real agreement',options:[
+   {text:'Agree to the email, document the requested topic and that no callback was welcomed, then close politely.',points:2,why:'You explored follow-up reasonably and accepted the answer. Record what was agreed without inventing a meeting or callback.'},
+   {text:'Ask for a callback one more time using different words.',points:0,why:'The contact has clarified the boundary. Further pressure can damage the relationship.'},
+   {text:'Record “discovery meeting pending”.',points:0,why:'An email route is not a discovery appointment. Accurate notes protect the next interaction.'}]}]},
+ {id:'contract-window',title:'An active agreement',skill:'Nurture & exit',icon:'continuity',scene:'A prospect has a current MSP contract and says the relationship is working well.',rounds:[
+  {title:'Treat the contract as context',quote:'“We have a contract through next year, and we are happy.”',prompt:'What is reasonable if their tone remains receptive?',criterion:'Clarify without manufacturing dissatisfaction',options:[
+   {text:'Ask whether there is a usual review window or any separately planned project where an introduction could be relevant.',points:2,why:'You explore timing or a distinct need without implying they should break a contract.'},
+   {text:'Tell them a contract should not stop them from switching.',points:0,why:'You dismiss their commitment instead of understanding the situation.'},
+   {text:'Assume every contract objection is a firm no-contact request.',points:1,why:'You avoid pressure, but a receptive contact may still welcome one relevant clarification.'}]},
+  {title:'Recognize a closed opening',quote:'“No projects to discuss. We are not reviewing alternatives and do not want follow-up.”',prompt:'What changed?',criterion:'Reassess when the evidence changes',options:[
+   {text:'They need a stronger fear-based cybersecurity pitch.',points:0,why:'The new information closes the discussion. Pressure does not create a viable opportunity.'},
+   {text:'The contact has declined further discussion and follow-up; end the pitch.',points:2,why:'You use the actual answer to reassess viability. A good SDR recognizes when the available opening has ended.'},
+   {text:'Ask them to accept a meeting just to compare options.',points:0,why:'That repeats the pitch after a clear boundary.'}]},
+  {title:'Choose a responsible disposition',quote:'“Thank you. We really do not want more sales calls.”',prompt:'What should the SDR do?',criterion:'Respect contact restrictions',options:[
+   {text:'Mark for recycle and call from another number next month.',points:0,why:'Recycle creates no permission and cannot be used to evade a contact restriction.'},
+   {text:'Close politely, record the restriction accurately and follow the approved no-contact process.',points:2,why:'This is a successful professional exit. Protect the relationship and apply the organization’s approved contact restriction process.'},
+   {text:'Stop calling but email weekly instead.',points:0,why:'Changing channels to bypass a stated restriction is not a respectful next step.'}]}]},
+ {id:'internal-assessment',title:'The internal IT team',skill:'Assessments',icon:'support',scene:'A prospect values their internal team and asks about an outside assessment, while making clear they do not want co-management.',rounds:[
+  {title:'Understand the boundary',quote:'“We have internal IT. We are not looking for co-management.”',prompt:'How would you respond if they remain willing to talk?',criterion:'Respect the operating model',options:[
+   {text:'Explain that their internal team cannot manage everything.',points:0,why:'You assume a capability gap and risk making the conversation adversarial.'},
+   {text:'Acknowledge that preference and ask whether any independently scoped project or outside review is relevant.',points:2,why:'You respect the model and explore only a distinct, potentially welcomed service.'},
+   {text:'Rename co-management as a partnership and pitch the same arrangement.',points:0,why:'Changing the label does not respect the stated preference.'}]},
+  {title:'Clarify assessment interest',quote:'“An outside review might help before our cloud project. Would that cost anything?”',prompt:'What should the SDR say?',criterion:'Confirm assessment terms',options:[
+   {text:'Promise the assessment is free with no conditions.',points:0,why:'Fees, scope and commitments must come from approved account terms.'},
+   {text:'Say assessments always lead to paid services.',points:0,why:'That is also an unsupported claim. Use verified account-specific terms.'},
+   {text:'Explain the approved terms if confirmed; otherwise offer to confirm scope, eligibility, fees and obligations with the responsible team.',points:2,why:'You handle the question honestly without inventing a price or condition.'}]},
+  {title:'Close on the actual purpose',quote:'“Yes, let’s speak about a one-time review before the cloud project.”',prompt:'What belongs in the handoff?',criterion:'Match the CTA to the welcomed service',options:[
+   {text:'A discussion about the review, project timing and participants, with the no-co-management preference recorded.',points:2,why:'The discovery purpose matches the interest they expressed, and the handoff preserves an important boundary.'},
+   {text:'An opportunity to replace their entire IT team.',points:0,why:'That contradicts the agreed purpose and could undermine trust during discovery.'},
+   {text:'An unconfirmed paid assessment order.',points:0,why:'Interest in a discussion is not an order or acceptance of unconfirmed terms.'}]}]},
+ {id:'corporate-route',title:'Corporate makes the decision',skill:'Gatekeepers',icon:'network',scene:'The local contact says the old director has left and corporate controls IT purchasing.',rounds:[
+  {title:'Correct the contact record',quote:'“That director no longer works here. Corporate handles IT now.”',prompt:'What is the useful next move?',criterion:'Find the appropriate route',options:[
+   {text:'Ask for the former director’s personal contact details.',points:0,why:'That does not help establish the current approved business route.'},
+   {text:'Thank them, confirm the current department or role, and ask how corporate accepts relevant vendor introductions.',points:2,why:'You correct the record and work toward the right stakeholder without forcing a local decision.'},
+   {text:'Keep pitching the local contact as the decision-maker.',points:0,why:'The contact has told you that the authority sits elsewhere.'}]},
+  {title:'Make a general inbox useful',quote:'“We only give out the general IT inbox. Please include your purpose.”',prompt:'What can you reasonably clarify?',criterion:'Use the access available',options:[
+   {text:'Ask whether a specific subject line or department name helps route a support-services introduction.',points:2,why:'A small routing detail can improve the message while respecting the limited access offered.'},
+   {text:'Insist on a direct email or refuse the general inbox.',points:0,why:'You reject the route they are authorized to provide without evidence of another opening.'},
+   {text:'Invent the director’s email address.',points:0,why:'Guessing a contact is not a verified route or an agreed next step.'}]},
+  {title:'Record progress accurately',quote:'“Use ‘IT vendor introduction’. I cannot promise anyone will reply.”',prompt:'How should you finish and document it?',criterion:'Separate a route from a commitment',options:[
+   {text:'Record a corporate meeting booked because the email was accepted.',points:0,why:'Acceptance of a message is not a meeting agreement.'},
+   {text:'Record the corrected role, approved inbox and subject, send the relevant message, and note that no response or callback was promised.',points:2,why:'You made useful progress within the access available and left an accurate handoff.'},
+   {text:'Assume the gatekeeper agreed to personally sponsor the MSP.',points:0,why:'The contact offered routing information, not sponsorship.'}]}]}
+]};
+if(typeof module!=='undefined')module.exports=OPPORTUNITY_GAME;

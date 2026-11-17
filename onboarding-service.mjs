@@ -1,3 +1,5 @@
+import crypto from 'node:crypto';
+if (!globalThis.crypto) globalThis.crypto = crypto;
 import {aiConfigured,taskAIReviews} from './ai-review-service.mjs';
 import content from '../content/onboarding.json' with {type:'json'};
 import {evaluateDiagnostic,evaluateContrast,learningRecord} from './learning-service.mjs';
