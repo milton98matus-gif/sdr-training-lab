@@ -1,0 +1,1 @@
+CREATE INDEX `training_section_user_date` ON `training_section_time_buckets` (`user_id`,`bucket_start`);
