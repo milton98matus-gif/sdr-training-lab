@@ -24,6 +24,8 @@ const TABLES = [
 let cachedGistId = process.env.GITHUB_GIST_ID || null;
 let syncTimer = null;
 let syncInProgress = false;
+let rateLimitedUntil = 0;
+const MIN_SYNC_INTERVAL_MS = 120000;
 let pendingSync = false;
 let lastSyncAt = null;
 let lastSyncError = null;
@@ -194,6 +196,10 @@ export async function syncToCloudNow(db) {
     return { synced: false, reason: 'in_progress' };
   }
 
+  if (Date.now() < rateLimitedUntil) {
+    return { synced: false, reason: 'rate_limited_backoff', retryAt: rateLimitedUntil };
+  }
+
   syncInProgress = true;
   try {
     const gistId = await findOrCreateBackupGist(token);
@@ -220,6 +226,14 @@ export async function syncToCloudNow(db) {
 
     if (!res.ok) {
       const errText = await res.text();
+      if (res.status === 403 || res.status === 429) {
+        const resetSec = Number(res.headers.get('x-ratelimit-reset') || 0);
+        const retryAfterSec = Number(res.headers.get('retry-after') || 0);
+        const waitMs = retryAfterSec > 0
+          ? retryAfterSec * 1000
+          : (resetSec * 1000 > Date.now() ? Math.min(3600000, resetSec * 1000 - Date.now() + 5000) : 15 * 60 * 1000);
+        rateLimitedUntil = Date.now() + Math.max(60000, waitMs);
+      }
       throw new Error(`GitHub Gist sync failed (${res.status}): ${errText}`);
     }
 
@@ -234,16 +248,20 @@ export async function syncToCloudNow(db) {
     syncInProgress = false;
     if (pendingSync) {
       pendingSync = false;
-      scheduleCloudSync(db, 3000);
+      scheduleCloudSync(db, 30000);
     }
   }
 }
 
-export function scheduleCloudSync(db, delayMs = 4000) {
+export function scheduleCloudSync(db, delayMs = 30000) {
   if (!getGithubToken()) return;
+  const now = Date.now();
+  const cooldownWait = lastSyncAt ? Math.max(0, (lastSyncAt + MIN_SYNC_INTERVAL_MS) - now) : 0;
+  const backoffWait = rateLimitedUntil > now ? (rateLimitedUntil - now) : 0;
+  const effectiveDelay = Math.max(delayMs, cooldownWait, backoffWait);
   if (syncTimer) clearTimeout(syncTimer);
   syncTimer = setTimeout(() => {
     syncTimer = null;
     syncToCloudNow(db).catch(() => {});
-  }, delayMs);
+  }, effectiveDelay);
 }
