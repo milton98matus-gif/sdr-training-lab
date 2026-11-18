@@ -549,7 +549,7 @@ export function createServer({ db, ownerEmail = OWNER_EMAIL, adminEmails = ADMIN
         const contentType = MIME_TYPES[ext] || 'application/octet-stream';
         res.writeHead(200, {
           'Content-Type': contentType,
-          'Cache-Control': ext === '.html' ? 'private, no-store' : 'public, max-age=3600'
+          'Cache-Control': ext === '.html' ? 'private, no-store' : (ext === '.js' || ext === '.css' ? 'no-cache, must-revalidate' : 'public, max-age=3600')
         });
         fs.createReadStream(fullPath).pipe(res);
         return;
