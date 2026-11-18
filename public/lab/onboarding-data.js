@@ -803,7 +803,7 @@ const ONBOARDING={
       "id": "next-steps",
       "phase": "conversation",
       "title": "Close the next step clearly",
-      "subtitle": "Email, vacation, contracts, and the discovery CTA.",
+      "subtitle": "Email, vacation, contracts, and the discovery Call to Action (CTA).",
       "cards": [
         {
           "title": "Send me an email",
@@ -998,7 +998,7 @@ const ONBOARDING={
           "body": "The director has not agreed to a meeting. No cost, technical cause, or replacement decision is known. A useful handoff tells the next person what to validate and what they must not assume. Practice using fictional details only."
         }
       ],
-      "scene": "Your CRM disposition must match what the contact actually accepted.",
+      "scene": "Your Customer Relationship Management (CRM) disposition must match what the contact actually accepted.",
       "questions": [
         {
           "prompt": "Which next-step note is accurate?",
@@ -1047,7 +1047,7 @@ const ONBOARDING={
       "cards": [
         {
           "title": "Complete your evidence",
-          "body": "Finish the knowledge checks and applied submissions. Practice at least six distinct main-case responses and complete one full Call Lab conversation. You may use the wider 84-case bank at any time; opening a case does not count as submitting it."
+          "body": "Finish the knowledge checks and applied submissions. Practice at least six distinct main-case responses and complete one full Call Lab conversation. You may use the wider 85-case bank at any time; opening a case does not count as submitting it."
         },
         {
           "title": "Know the assigned account",

@@ -574,7 +574,7 @@ const Reporting = (() => {
           <div class="ob-queue">${p.report?.onboarding?.openHelp ? '<span>Needs help</span>' : ''}${p.report?.onboarding?.overdue ? '<span>Past due</span>' : ''}${p.report?.onboarding?.status === 'Needs review' ? '<span>Review ready</span>' : ''}</div>
           <button class="text-button" data-ob-admin="${h(p.id)}">Onboarding ↗</button>
         </td>
-        <td>${p.report?.casesCompleted || 0} / 84</td>
+        <td>${p.report?.casesCompleted || 0} / 85</td>
         <td>${p.report?.callsCompleted || 0} / 3</td>
         <td>${pct(p.report?.firstAligned || 0, p.report?.firstDecisions || 0)}<small>${p.report?.firstDecisions || 0} decisions</small></td>
         <td>${[...new Set([p.report?.onboarding?.nextRecommendedTopic, ...(p.report?.onboarding?.reinforcement || []).map(u => u.title), ...(p.report?.suggestions || []).map(s => s.topic)].filter(Boolean))].slice(0, 2).map(h).join(', ') || 'No signal yet'}</td>

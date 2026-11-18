@@ -30,8 +30,7 @@ const Training=(()=>{
     for(const ev of ledger)if(!pendingIds.has(ev.id))pending.push(ev);
     storeQueue();
    }
-   const sideEl=document.querySelector('.sidebar-bottom');if(sideEl)sideEl.innerHTML=`<span class="avatar">${safe(user.name.slice(0,1).toUpperCase())}</span><div class="sidebar-user-block"><span class="sidebar-user-name">${safe(user.name)}</span></div><span class="status-dot" title="Active session"></span>`;
-   document.querySelectorAll('[data-admin-only]').forEach(el=>el.hidden=!['owner','admin'].includes(user.role));
+    document.querySelectorAll('[data-admin-only]').forEach(el=>el.hidden=!['owner','admin'].includes(user.role));
    banner(`<span><strong>${safe(user.name)}</strong> <span id="account-sync">Progress saved to your profile</span></span>${legacy()?'<span><button class="text-button" data-training="import">Import earlier browser practice</button></span>':''}`);
    const foot=document.querySelector('.footer-copy');if(foot)foot.textContent='L&D-SDRlab · Private learning & development environment · Osprey Strategic Research';
    flush();
