@@ -3,6 +3,7 @@ if (!globalThis.crypto) globalThis.crypto = crypto;
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
+import zlib from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 import { handleTrainingRequest } from '../lib/training-service.mjs';
 import { createDatabase, SEEDED_ACCOUNTS } from './db.mjs';
@@ -544,15 +545,47 @@ export function createServer({ db, ownerEmail = OWNER_EMAIL, adminEmails = ADMIN
         }
       }
 
-      if (fs.existsSync(fullPath) && fs.statSync(fullPath).isFile()) {
-        const ext = path.extname(fullPath).toLowerCase();
-        const contentType = MIME_TYPES[ext] || 'application/octet-stream';
-        res.writeHead(200, {
-          'Content-Type': contentType,
-          'Cache-Control': ext === '.html' ? 'private, no-store' : (ext === '.js' || ext === '.css' ? 'no-cache, must-revalidate' : 'public, max-age=3600')
-        });
-        fs.createReadStream(fullPath).pipe(res);
-        return;
+      if (fs.existsSync(fullPath)) {
+        const stat = fs.statSync(fullPath);
+        if (stat.isFile()) {
+          const ext = path.extname(fullPath).toLowerCase();
+          const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+          const hasVersion = (req.url || '').includes('?v=');
+          const cacheControl = ext === '.html'
+            ? 'private, no-store'
+            : ((ext === '.js' || ext === '.css')
+                ? (hasVersion ? 'public, max-age=604800, immutable' : 'public, max-age=3600')
+                : 'public, max-age=86400');
+
+          const headers = {
+            'Content-Type': contentType,
+            'Cache-Control': cacheControl,
+          };
+
+          if (ext !== '.html') {
+            const etag = `"${stat.size}-${Math.floor(stat.mtimeMs)}"`;
+            headers['ETag'] = etag;
+            if (req.headers['if-none-match'] === etag) {
+              res.writeHead(304, headers);
+              res.end();
+              return;
+            }
+          }
+
+          const compressible = ext === '.html' || ext === '.css' || ext === '.js' || ext === '.mjs' || ext === '.json' || ext === '.svg';
+          const acceptEncoding = String(req.headers['accept-encoding'] || '');
+          if (compressible && /gzip/i.test(acceptEncoding)) {
+            headers['Content-Encoding'] = 'gzip';
+            headers['Vary'] = 'Accept-Encoding';
+            res.writeHead(200, headers);
+            fs.createReadStream(fullPath).pipe(zlib.createGzip({ level: 6 })).pipe(res);
+            return;
+          }
+
+          res.writeHead(200, headers);
+          fs.createReadStream(fullPath).pipe(res);
+          return;
+        }
       }
 
       // SPA Fallback: check authentication before serving index.html
@@ -565,7 +598,16 @@ export function createServer({ db, ownerEmail = OWNER_EMAIL, adminEmails = ADMIN
 
       const indexPath = path.join(PUBLIC_DIR, 'index.html');
       if (fs.existsSync(indexPath)) {
-        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'private, no-store' });
+        const acceptEncoding = String(req.headers['accept-encoding'] || '');
+        const headers = { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'private, no-store' };
+        if (/gzip/i.test(acceptEncoding)) {
+          headers['Content-Encoding'] = 'gzip';
+          headers['Vary'] = 'Accept-Encoding';
+          res.writeHead(200, headers);
+          fs.createReadStream(indexPath).pipe(zlib.createGzip({ level: 6 })).pipe(res);
+          return;
+        }
+        res.writeHead(200, headers);
         fs.createReadStream(indexPath).pipe(res);
         return;
       }
